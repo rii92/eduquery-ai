@@ -1,8 +1,3 @@
-"""Titik masuk FastAPI.
-
-Halaman utama (/) adalah BP Batam Data Warehouse.
-Halaman sekolah (/sekolah) tetap tersedia sebagai secondary.
-"""
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -16,7 +11,6 @@ from app.api.intents import router as intents_router
 
 app = FastAPI(title="EduQuery AI — BP Batam")
 
-# ── Berkas statis ─────────────────────────────────
 static_dir = Path(__file__).resolve().parent.parent / "static"
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
@@ -24,15 +18,10 @@ app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 def index():
     return FileResponse(str(static_dir / "index.html"))
 
-# ── Rute API ───────────────────────────────────────
 app.include_router(webhook_router)
 app.include_router(query_router)
 app.include_router(config_router)
 app.include_router(intents_router)
-
-@app.get("/sekolah")
-def sekolah_page():
-    return FileResponse(str(static_dir / "sekolah.html"))
 
 @app.get("/intents")
 def intents_page():

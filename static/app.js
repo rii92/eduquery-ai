@@ -6,6 +6,7 @@ const STORAGE_KEY = 'eduquery_bp_history';
 let sqlEditor = null;
 let timerInterval = null;
 let startTime = 0;
+let aiInsightEnabled = true;
 
 document.addEventListener('DOMContentLoaded', function() {
   loadHistory();
@@ -19,7 +20,28 @@ document.addEventListener('DOMContentLoaded', function() {
     indentUnit: 2,
     tabSize: 2,
   });
+  updateAIToggleUI();
 });
+
+function toggleAI() {
+  aiInsightEnabled = !aiInsightEnabled;
+  updateAIToggleUI();
+}
+
+function updateAIToggleUI() {
+  const btn = document.getElementById('aiToggle');
+  if (aiInsightEnabled) {
+    btn.classList.remove('btn-outline-info');
+    btn.classList.add('btn-info');
+    btn.innerHTML = '<i class="bi bi-stars"></i>';
+    btn.title = 'AI Insight aktif — klik untuk nonaktifkan';
+  } else {
+    btn.classList.remove('btn-info');
+    btn.classList.add('btn-outline-info');
+    btn.innerHTML = '<i class="bi bi-stars-slash"></i>';
+    btn.title = 'AI Insight nonaktif — klik untuk aktifkan';
+  }
+}
 
 function getFilterParams() {
   const tgl = document.getElementById('filterTgl').value || '';
@@ -105,6 +127,15 @@ function showResult(question, data) {
   panel.classList.remove('d-none');
 
   document.getElementById('replyBox').innerHTML = marked.parse(data.reply || '(kosong)');
+
+  const insightBox = document.getElementById('insightPanel');
+  if (data.ai_insight && aiInsightEnabled) {
+    document.getElementById('insightBox').innerHTML = marked.parse(data.ai_insight);
+    insightBox.classList.remove('d-none');
+  } else {
+    insightBox.classList.add('d-none');
+  }
+
   if (sqlEditor) sqlEditor.setValue(data.sql || '-');
 
   renderTable(data.result);
@@ -122,12 +153,14 @@ function showResult(question, data) {
 
 function hideResult() {
   document.getElementById('resultPanel').classList.add('d-none');
+  document.getElementById('insightPanel').classList.add('d-none');
 }
 
 function showError(msg) {
   const panel = document.getElementById('resultPanel');
   panel.classList.remove('d-none');
   document.getElementById('replyBox').innerHTML = '⚠️ ' + msg;
+  document.getElementById('insightPanel').classList.add('d-none');
   if (sqlEditor) sqlEditor.setValue('-');
   document.getElementById('resultBox').textContent = '-';
   document.getElementById('resultTable').innerHTML = '';
@@ -178,6 +211,7 @@ function updateStep(stepText) {
     'Memvalidasi SQL...': 'validasi',
     'Menjalankan query ke database...': 'eksekusi',
     'Menyusun jawaban...': 'jawaban',
+    'Menganalisis insight...': 'insight',
   };
   const stepId = steps[stepText];
   if (!stepId) return;
@@ -199,9 +233,10 @@ function updateProgress(pct) {
 
   if (pct >= 30) markStepDone('analisis');
   if (pct >= 50) markStepDone('sql');
-  if (pct >= 70) markStepDone('validasi');
-  if (pct >= 90) markStepDone('eksekusi');
-  if (pct >= 100) markStepDone('jawaban');
+  if (pct >= 60) markStepDone('validasi');
+  if (pct >= 80) markStepDone('eksekusi');
+  if (pct >= 90) markStepDone('jawaban');
+  if (pct >= 100) markStepDone('insight');
 }
 
 function markStepDone(stepId) {
@@ -240,6 +275,7 @@ function saveToHistory(question, data) {
     reply: data.reply || '',
     sql: data.sql || '',
     result: data.result || [],
+    ai_insight: data.ai_insight || '',
     elapsed: data.elapsed || 0,
     timestamp: Date.now(),
   });
@@ -290,7 +326,7 @@ function restoreQuery(idx) {
   const item = history[idx];
   if (!item) return;
   document.getElementById('questionInput').value = item.question;
-  showResult(item.question, { reply: item.reply, sql: item.sql, result: item.result, elapsed: item.elapsed });
+  showResult(item.question, { reply: item.reply, sql: item.sql, result: item.result, ai_insight: item.ai_insight, elapsed: item.elapsed });
 }
 
 function deleteHistoryItem(idx) {

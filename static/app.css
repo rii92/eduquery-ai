@@ -75,6 +75,20 @@ pre {
   background: #e9ecef;
 }
 
+/* Insight panel */
+#insightBox {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* AI toggle button */
+#aiToggle {
+  transition: all 0.2s ease;
+}
+#aiToggle.btn-info {
+  box-shadow: 0 0 8px rgba(13, 202, 240, 0.5);
+}
+
 /* Step progress */
 .step-item {
   transition: all 0.3s ease;

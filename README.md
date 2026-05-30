@@ -1,56 +1,49 @@
-# EduQuery AI
+# EduQuery AI — BP Batam Data Warehouse
 
-EduQuery AI adalah sistem tanya-jawab database sekolah berbasis bahasa alami yang berjalan lokal. Dilengkapi antarmuka web dan endpoint API.
+EduQuery AI adalah sistem tanya-jawab database **BP Batam Data Warehouse** berbasis bahasa alami. Mengakses data perizinan dari Oracle DB (`US_DWH.BI_MART_STATUS_PERIZINAN`) melalui antarmuka web dan endpoint API.
 
 ## Fitur
 
-- **Intent-based SQL**: 30+ intent pertanyaan dengan template SQL menggunakan CTE
-- **Keyword Classifier**: Deteksi intent cepat (tanpa LLM) untuk pertanyaan umum seperti jumlah siswa, rata-rata nilai, wali kelas
+- **Intent-based SQL**: 6+ intent pertanyaan perizinan dengan template SQL
+- **Keyword Classifier**: Deteksi intent cepat (tanpa LLM) untuk pertanyaan umum seperti total masuk, izin terbit, backlog
 - **LLM Fallback**: Ollama (`gemma3:1b`) untuk pertanyaan kompleks yang tidak cocok keyword
-- **Filter Tahun Ajaran & Semester**: Dropdown filter yang selalu muncul di SQL dengan `IN()` syntax
+- **Filter Tanggal & Jenis Izin**: Parameter filter `tgl_status_terakhir`, `perizinan`, `kategori_status`
 - **SSE Streaming**: Progress real-time saat memproses pertanyaan
 - **Riwayat Pertanyaan**: Tersimpan di localStorage browser
-- **Intent Management**: Halaman `/intents` untuk melihat/mengedit intent
-- **Dual DB Support**: MySQL (Docker) atau SQLite (dev lokal)
+- **Intent Management**: Halaman `/intents` untuk melihat/mengeditt intent
+- **Oracle Database**: Koneksi langsung ke BP Batam Oracle DB via python-oracledb (thin mode)
 
 ## Quick Start
 
 ```bash
-# Opsi 1 — Docker (recommended)
-scripts/run.sh docker
+# Install dependencies
+uv sync
 
-# Opsi 2 — Lokal
-scripts/run.sh init       # Pull model Ollama + migrasi DB
-scripts/run.sh start      # FastAPI dev server di http://localhost:8000
+# Salin .env dari .env.example, sesuaikan dengan kredensial Oracle BP Batam
+cp .env.example .env
+
+# Jalankan server
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Container management
-
-```bash
-scripts/run.sh docker-init  # Jalankan ulang init (migrasi + pull model)
-scripts/run.sh restart       # Restart app container
-scripts/run.sh logs          # Tail app container logs
-scripts/run.sh stop          # docker compose down
-```
+Buka `http://localhost:8000` setelah server berjalan.
 
 ### Testing
 
 ```bash
-scripts/run.sh test
+uv run pytest
 ```
 
 ## Antarmuka Web
 
-Buka `http://localhost:8000` setelah server berjalan.
+Buka `http://localhost:8000`:
 
-![Screenshot](screenshoot.png)
-
-- Kotak teks untuk mengetik pertanyaan
-- **Filter Tahun Ajaran & Semester** (dropdown, default "Semua")
-- Tombol contoh pertanyaan cepat (reset filter ke Semua)
+- Kotak teks untuk mengetik pertanyaan seputar data perizinan BP Batam
+- Filter tanggal (`tgl_status_terakhir`) dan jenis izin (`perizinan`)
 - Timer elapsed realtime selama loading
 - Progress bar + step indicator (SSE streaming)
 - Menampilkan SQL query yang dihasilkan, hasil mentah (tabel/JSON), dan balasan natural
+- **AI Insight**: Analisis otomatis dari hasil query oleh LLM (toggle on/off), muncul di card terpisah
 - Riwayat pertanyaan tersimpan di localStorage (klik untuk menjalankan ulang)
 
 ## Endpoint API
@@ -61,53 +54,57 @@ Mengembalikan SQL, hasil mentah, balasan natural.
 
 ```json
 {
-  "message": "Berapa jumlah siswa kelas X IPA?",
-  "academic_year": "Semua",
-  "semester": "Semua"
+  "message": "Total masuk izin BP Batam",
+  "tgl_status_terakhir": "",
+  "perizinan": "",
+  "kategori_status": ""
 }
 ```
 
 ### `GET /api/query/stream`
 
-SSE endpoint dengan progress real-time (5 tahap: analisis → SQL → validasi → eksekusi → jawaban).
+SSE endpoint dengan progress real-time.
 
 ```
-GET /api/query/stream?message=Rata-rata+nilai+Budi&academic_year=Semua&semester=Semua
+GET /api/query/stream?message=Total+masuk+izin+BP+Batam&tgl_status_terakhir=&perizinan=
 ```
 
 ### `GET /api/config`
 
-Mengembalikan konfigurasi publik (model, daftar tahun ajaran, semester).
+Mengembalikan konfigurasi publik (model Ollama, daftar intent source).
 
 ### `GET /api/intents`
 
 Daftar intent, template SQL, contoh, dan parameter.
 
-## Intent Reference
+## Intent Tersedia
 
-Daftar lengkap intent + SQL template ada di [`database/intents.md`](database/intents.md).
+| Intent ID | Deskripsi |
+|-----------|-----------|
+| `bp_total_masuk` | Total permohonan izin masuk per minggu |
+| `bp_izin_terbit_per_bulan` | Izin terbit per minggu |
+| `bp_total_backlog_per_bulan` | Total backlog (belum terbit) per minggu |
+| `bp_dalam_proses` | Permohonan dalam proses per hari |
+| `bp_sebaran_jenis_izin` | Sebaran permohonan berdasarkan jenis izin & status |
+| `bp_komposisi_status` | Komposisi keseluruhan status perizinan per minggu |
+
 Intent dikelola secara dinamis melalui file `prompts/intents.json` dan dapat ditambah/diedit melalui halaman `/intents`.
 
 ## Environment Variables
 
-Semua konfigurasi dikelola via `.env` (lihat `.env.example` untuk template):
+Konfigurasi via `.env` (lihat `.env.example` untuk template):
 
 | Variabel | Wajib | Default | Deskripsi |
 |----------|-------|---------|-----------|
-| `DB_HOST` | ✅ | `localhost` | Host database |
-| `DB_PORT` | ✅ | `3306` | Port database |
-| `DB_NAME` | ✅ | `db_eduquery` | Nama database |
-| `DB_USER` | ✅ | `root` | User database |
-| `DB_PASSWORD` | ✅ | — | Password database |
-| `DB_IS_LOCAL` | | auto | Pakai SQLite (`true`) atau MySQL (`false`) |
 | `OLLAMA_HOST` | ✅ | `http://localhost:11434` | URL Ollama API |
 | `OLLAMA_MODEL` | | `gemma3:1b` | Model LLM |
 | `OLLAMA_TIMEOUT` | | `60` | Timeout panggilan Ollama (detik) |
 | `APP_HOST` | | `0.0.0.0` | Bind address FastAPI |
 | `APP_PORT` | | `8000` | Port FastAPI |
-| `SQLITE_PATH` | | `database/eduquery.db` | Path file SQLite (local dev) |
-| `ACADEMIC_YEARS` | | `2023/2024,2024/2025,2025/2026` | Tahun ajaran untuk seed |
-| `SEMESTERS` | | `Ganjil,Genap` | Semester |
+| `BP_DB_USER` | ✅ | `us_dwh` | User Oracle BP Batam |
+| `BP_DB_PASSWORD` | ✅ | — | Password Oracle BP Batam |
+| `BP_DB_HOST` | ✅ | `bpdb-scan.bpbatam.go.id:1521` | Host:port Oracle |
+| `BP_DB_SERVICE_NAME` | ✅ | `begs` | Service name Oracle |
 
 ## Project Structure
 
@@ -117,34 +114,40 @@ Semua konfigurasi dikelola via `.env` (lihat `.env.example` untuk template):
 │   ├── api/
 │   │   ├── config.py             # GET /api/config
 │   │   ├── intents.py            # GET /api/intents
-│   │   └── query.py              # POST /api/query + GET /api/query/stream
+│   │   ├── query.py              # POST /api/query + GET /api/query/stream
+│   │   └── webhook.py            # Webhook endpoint
 │   ├── ai/
-│   │   ├── intent_extractor.py   # Intent + slot extraction via Ollama
+│   │   ├── intent_extractor.py   # Intent extraction via Ollama
 │   │   └── keyword_classifier.py # Deterministic keyword → intent (fast path)
 │   ├── sql/
 │   │   ├── template_engine.py    # Intent → SQL templates
 │   │   └── validator.py          # SELECT-only validator
 │   ├── database/
-│   │   ├── client.py             # DB client (MySQL / SQLite)
-│   │   ├── migrate.py            # Drop + create + seed (cohort-based)
-│   │   └── schema_meta.py        # Schema metadata + column aliases
-│   ├── formatter/response.py     # DB result → natural language
-│   ├── services/                 # Service layer (intent, database, formatter)
-│   └── core/config.py            # Semua konfigurasi dari .env
+│   │   └── bp_client.py          # Oracle DB client via SQLAlchemy + oracledb
+│   ├── intents/
+│   │   └── loader.py             # Load/manage intents from prompts/intents.json
+│   ├── services/
+│   │   ├── bp_database_service.py # DB service (generate SQL, validate, execute)
+│   │   └── bp_formatter_service.py # DB result → natural language
+│   └── core/config.py            # Konfigurasi dari .env
 ├── static/                       # Frontend (Bootstrap)
 │   ├── index.html
+│   ├── intents.html
 │   ├── app.css
 │   └── app.js
 ├── prompts/
-│   └── intents.json              # 30 intent definitions with SQL templates
-├── database/
-│   └── intents.md                # Intent reference documentation
-├── scripts/
-│   ├── run.sh                    # Unified runner
-│   ├── docker-init.sh            # Init container entrypoint
-│   ├── init.sh                   # Legacy alias
-│   └── start.sh                  # App container entrypoint
+│   └── intents.json              # Intent definitions with SQL templates
+├── tests/
 ├── Dockerfile / docker-compose.yml
 ├── .env.example
-└── pyproject.toml
+├── pyproject.toml
+└── uv.lock
 ```
+
+## Tech Stack
+
+- **Backend**: Python 3.11+, FastAPI, Uvicorn
+- **Database**: Oracle via SQLAlchemy + python-oracledb (thin mode)
+- **LLM**: Ollama (gemma3:1b)
+- **Frontend**: Bootstrap 5, vanilla JS, CodeMirror, marked
+- **Package Manager**: uv

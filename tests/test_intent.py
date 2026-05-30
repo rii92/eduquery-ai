@@ -1,24 +1,43 @@
-"""Unit test untuk ekstraksi intent (HTTP di-mock)."""
-from unittest.mock import patch
+"""Unit test untuk ekstraksi intent BP Batam."""
 
-from app.services.intent_service import IntentService
-
-
-@patch("app.ai.intent_extractor.httpx.post")
-def test_count_students_extract(mock_post):
-    # Pakai query yang tidak cocok dengan keyword classifier
-    mock_post.return_value.status_code = 200
-    mock_post.return_value.json.return_value = {
-        "response": '{"intent": "count_students", "params": {}}'
-    }
-    svc = IntentService()
-    result = svc.extract("Hitung total siswa")
-    assert result["intent"] == "count_students"
+from app.ai.keyword_classifier import classify_by_keyword
 
 
-@patch("app.ai.intent_extractor.httpx.post")
-def test_unknown_intent_on_error(mock_post):
-    mock_post.side_effect = Exception("connection error")
-    svc = IntentService()
-    result = svc.extract("Hapus semua data")
-    assert result["intent"] == ""
+def test_bp_total_masuk():
+    result = classify_by_keyword("Total masuk izin BP Batam")
+    assert result["intent"] == "bp_total_masuk"
+
+
+def test_bp_izin_terbit():
+    result = classify_by_keyword("Jumlah izin yang sudah terbit")
+    assert result["intent"] == "bp_izin_terbit_per_bulan"
+
+
+def test_bp_backlog():
+    result = classify_by_keyword("Berapa backlog perizinan?")
+    assert result["intent"] == "bp_total_backlog_per_bulan"
+
+
+def test_bp_dalam_proses():
+    result = classify_by_keyword("Izin dalam proses BP Batam")
+    assert result["intent"] == "bp_dalam_proses"
+
+
+def test_bp_komposisi():
+    result = classify_by_keyword("Komposisi status perizinan BP Batam")
+    assert result["intent"] == "bp_komposisi_status"
+
+
+def test_bp_sebaran():
+    result = classify_by_keyword("Sebaran izin BP Batam")
+    assert result["intent"] == "bp_sebaran_jenis_izin"
+
+
+def test_greeting():
+    result = classify_by_keyword("Halo")
+    assert result["intent"] == "_greeting"
+
+
+def test_unknown():
+    result = classify_by_keyword("Apa kabar cuaca hari ini?")
+    assert result is None

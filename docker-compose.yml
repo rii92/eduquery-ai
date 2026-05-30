@@ -1,65 +1,11 @@
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: eduquery-mysql
-    environment:
-      TZ: Asia/Jakarta
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD harus diisi di .env}
-      MYSQL_DATABASE: ${DB_NAME}
-    ports:
-      - "${DB_PORT}:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-  ollama:
-    image: ollama/ollama:latest
-    container_name: eduquery-ollama
-    environment:
-      TZ: Asia/Jakarta
-    env_file:
-      - .env
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-      - ./scripts/ollama-entrypoint.sh:/ollama-entrypoint.sh
-    entrypoint: ["/bin/bash", "/ollama-entrypoint.sh"]
-
-  init:
-    build: .
-    container_name: eduquery-init
-    depends_on:
-      mysql:
-        condition: service_healthy
-    env_file:
-      - .env
-    environment:
-      TZ: Asia/Jakarta
-      DB_HOST: mysql
-      DB_PORT: 3306
-    volumes:
-      - ./app:/app/app
-      - ./scripts:/app/scripts
-    entrypoint: ["/bin/bash", "/app/scripts/docker-init.sh"]
-
   app:
     build: .
     container_name: eduquery-app
-    depends_on:
-      init:
-        condition: service_completed_successfully
     env_file:
       - .env
     environment:
       TZ: Asia/Jakarta
-      DB_HOST: mysql
-      DB_PORT: 3306
-      OLLAMA_HOST: http://ollama:11434
       APP_PORT: ${APP_PORT}
     ports:
       - "${APP_PORT}:8000"
@@ -67,9 +13,4 @@ services:
       - ./app:/app/app
       - ./static:/app/static
       - ./prompts:/app/prompts
-      - ./scripts:/app/scripts
-    entrypoint: ["/bin/bash", "/app/scripts/start.sh"]
-
-volumes:
-  mysql_data:
-  ollama_data:
+    command: ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

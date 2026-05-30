@@ -2,9 +2,6 @@ import re
 
 class SQLValidator:
     ALLOWED_TABLES = [
-        "students", "teachers", "classrooms", "subjects", "grades",
-        "attendance", "extracurriculars", "student_extracurriculars",
-        "homeroom_teachers",
         "bi_mart_status_perizinan",
     ]
     FORBIDDEN = ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER"]

@@ -35,4 +35,4 @@ class BPClient:
         with self.engine.connect() as conn:
             result = conn.execute(text(sql))
             rows = result.fetchall()
-            return [dict(row._mapping) for row in rows]
+            return [{str(k).upper(): v for k, v in row._mapping.items()} for row in rows]

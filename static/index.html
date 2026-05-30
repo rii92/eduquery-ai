@@ -31,9 +31,6 @@
                     <span class="badge bg-warning text-dark ms-2" style="font-size: 0.5em; vertical-align: middle">Data Warehouse</span>
                 </a>
                 <div class="d-flex gap-2">
-                    <a href="/sekolah" class="btn btn-outline-light btn-sm">
-                        <i class="bi bi-search-heart"></i> Sekolah
-                    </a>
                     <a href="/intents" class="btn btn-outline-light btn-sm">
                         <i class="bi bi-gear"></i> Kelola Intent
                     </a>
@@ -66,6 +63,9 @@
                                                 submitQuery();
                                         "
                                     />
+                                    <button class="btn btn-outline-info me-1" id="aiToggle" onclick="toggleAI()" title="AI Insight">
+                                        <i class="bi bi-stars"></i>
+                                    </button>
                                     <button
                                         class="btn btn-warning text-dark"
                                         onclick="submitQuery()"
@@ -116,6 +116,12 @@
                                         <span id="elapsedBadge" class="badge bg-secondary ms-2 d-none"></span>
                                     </label>
                                     <div id="replyBox" class="p-3 bg-success-subtle border border-success rounded-3"></div>
+                                </div>
+                                <div id="insightPanel" class="mb-2 d-none">
+                                    <label class="form-label fw-semibold text-info">
+                                        <i class="bi bi-stars me-1"></i> AI Insight
+                                    </label>
+                                    <div id="insightBox" class="p-3 bg-info-subtle border border-info rounded-3"></div>
                                 </div>
                                 <div class="mb-2">
                                     <label class="form-label fw-semibold text-secondary small">
@@ -173,6 +179,10 @@
                                     <div class="step-item text-muted small py-1" data-step="jawaban">
                                         <i class="bi bi-hourglass-split me-2"></i>
                                         <span class="step-text">Menyusun jawaban...</span>
+                                    </div>
+                                    <div class="step-item text-muted small py-1" data-step="insight">
+                                        <i class="bi bi-hourglass-split me-2"></i>
+                                        <span class="step-text">Menganalisis insight...</span>
                                     </div>
                                 </div>
                                 <p class="mt-2 text-muted small">

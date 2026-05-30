@@ -1,4 +1,4 @@
-"""Integration test for the /webhook/whatsapp endpoint (mocked Ollama)."""
+"""Integration test for the /webhook/whatsapp endpoint."""
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
@@ -7,23 +7,20 @@ from app.main import app
 client = TestClient(app)
 
 
-@patch("app.ai.intent_extractor.httpx.post")
-def test_webhook_known_intent(mock_post):
-    mock_post.return_value.status_code = 200
-    mock_post.return_value.json.return_value = {
-        "response": '{"intent": "count_students", "params": {}}'
-    }
+@patch("app.services.bp_database_service.BPClient.execute")
+def test_webhook_known_intent(mock_execute):
+    mock_execute.side_effect = Exception("getaddrinfo failed")
     resp = client.post("/webhook/whatsapp", json={
         "sender": "628123456789",
-        "message": "Berapa jumlah siswa?"
+        "message": "Jumlah izin yang sudah terbit"
     })
     assert resp.status_code == 200
-    assert "reply" in resp.json()
+    data = resp.json()
+    assert "reply" in data
+    assert "ERROR" in data["reply"]
 
 
-@patch("app.ai.intent_extractor.httpx.post")
-def test_webhook_unknown_intent(mock_post):
-    mock_post.side_effect = Exception("connection error")
+def test_webhook_unknown_intent():
     resp = client.post("/webhook/whatsapp", json={
         "sender": "628123456789",
         "message": "Hapus semua siswa"
