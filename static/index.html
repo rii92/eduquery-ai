@@ -48,45 +48,65 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label
-                                    for="questionInput"
-                                    class="form-label fw-semibold"
-                                >Pertanyaan / Laporan</label>
+                                <label for="questionInput" class="form-label fw-semibold">Pertanyaan / Laporan</label>
                                 <div class="input-group">
                                     <input
                                         type="text"
                                         id="questionInput"
                                         class="form-control form-control"
                                         placeholder="Contoh: Total masuk izin BP Batam"
-                                        onkeydown="
-                                            if (event.key === 'Enter')
-                                                submitQuery();
-                                        "
+                                        onkeydown="if (event.key === 'Enter') submitQuery();"
                                     />
                                     <button class="btn btn-outline-info me-1" id="aiToggle" onclick="toggleAI()" title="AI Insight">
                                         <i class="bi bi-stars"></i>
                                     </button>
-                                    <button
-                                        class="btn btn-warning text-dark"
-                                        onclick="submitQuery()"
-                                    >
+                                    <button class="btn btn-warning text-dark" onclick="submitQuery()">
                                         <i class="bi bi-send me-1"></i> Proses
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="row g-2 mb-3">
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold text-muted">Filter Tanggal</label>
-                                    <input type="text" id="filterTgl" class="form-control form-control-sm" placeholder="contoh: TGL_STATUS_TERAKHIR >= TO_DATE('2024-01-01','YYYY-MM-DD')">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold text-muted">Filter Jenis Izin</label>
-                                    <input type="text" id="filterIzin" class="form-control form-control-sm" placeholder="contoh: PERIZINAN IN ('PB','PL')">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold text-muted">Filter Status</label>
-                                    <input type="text" id="filterStatus" class="form-control form-control-sm" placeholder="contoh: KATEGORI_STATUS = 'Terbit'">
+                            <!-- Provider Selection Card -->
+                            <div class="card card-body bg-light mb-3 py-2 px-3">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-4">
+                                        <label class="small fw-semibold text-muted d-block">LLM Fallback</label>
+                                        <div class="btn-group btn-group-sm w-100">
+                                            <input type="radio" class="btn-check" name="intentProvider" id="intentProviderLocal" value="local" checked>
+                                            <label class="btn btn-outline-primary btn-sm" for="intentProviderLocal">Local LLM</label>
+                                            <input type="radio" class="btn-check" name="intentProvider" id="intentProviderCloud" value="cloud">
+                                            <label class="btn btn-outline-primary btn-sm" for="intentProviderCloud">Cloud LLM</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="small fw-semibold text-muted d-block">Insight Provider</label>
+                                        <div class="btn-group btn-group-sm w-100">
+                                            <input type="radio" class="btn-check" name="insightProvider" id="insightDet" value="deterministic" checked>
+                                            <label class="btn btn-outline-success btn-sm" for="insightDet">Deterministik</label>
+                                            <input type="radio" class="btn-check" name="insightProvider" id="insightLocal" value="llm">
+                                            <label class="btn btn-outline-success btn-sm insight-llm" for="insightLocal">Local LLM</label>
+                                            <input type="radio" class="btn-check" name="insightProvider" id="insightCloud" value="llm_cloud">
+                                            <label class="btn btn-outline-success btn-sm insight-llm" for="insightCloud">Cloud LLM</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="small fw-semibold text-muted d-block">Filter</label>
+                                        <div class="d-flex gap-1">
+                                            <select id="filterTgl" class="form-select form-select-sm">
+                                                <option value="">Semua Tanggal</option>
+                                                <option value="TGL_STATUS_TERAKHIR >= TO_DATE('2025-01-01','YYYY-MM-DD')">2025+</option>
+                                                <option value="TGL_STATUS_TERAKHIR >= TO_DATE('2026-01-01','YYYY-MM-DD')">2026+</option>
+                                            </select>
+                                            <select id="filterIzin" class="form-select form-select-sm">
+                                                <option value="">Semua Izin</option>
+                                                <option value="PERIZINAN IN ('PB')">PB</option>
+                                                <option value="PERIZINAN IN ('PL')">PL</option>
+                                                <option value="PERIZINAN IN ('PBUMKU')">PBUMKU</option>
+                                                <option value="PERIZINAN IN ('PKKPRL')">PKKPRL</option>
+                                                <option value="PERIZINAN IN ('PPKH')">PPKH</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -114,6 +134,7 @@
                                     <label class="form-label fw-semibold text-success">
                                         <i class="bi bi-check-circle me-1"></i> Jawaban
                                         <span id="elapsedBadge" class="badge bg-secondary ms-2 d-none"></span>
+                                        <span id="intentBadge" class="badge bg-info ms-1 d-none"></span>
                                     </label>
                                     <div id="replyBox" class="p-3 bg-success-subtle border border-success rounded-3"></div>
                                 </div>
@@ -122,6 +143,12 @@
                                         <i class="bi bi-stars me-1"></i> AI Insight
                                     </label>
                                     <div id="insightBox" class="p-3 bg-info-subtle border border-info rounded-3"></div>
+                                </div>
+                                <div id="detInsightPanel" class="mb-2 d-none">
+                                    <label class="form-label fw-semibold text-secondary">
+                                        <i class="bi bi-bar-chart me-1"></i> Ringkasan Data
+                                    </label>
+                                    <div id="detInsightBox" class="p-3 bg-light border rounded-3 small"></div>
                                 </div>
                                 <div class="mb-2">
                                     <label class="form-label fw-semibold text-secondary small">
@@ -159,10 +186,22 @@
                                 <div class="progress mb-3" style="height: 6px;">
                                     <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning" style="width: 0%"></div>
                                 </div>
-                                <div id="stepList" class="text-start mx-auto" style="max-width: 360px;">
+                                <div id="stepList" class="text-start mx-auto" style="max-width: 400px;">
                                     <div class="step-item text-muted small py-1" data-step="analisis">
                                         <i class="bi bi-hourglass-split me-2"></i>
                                         <span class="step-text">Menganalisis pertanyaan...</span>
+                                    </div>
+                                    <div class="step-item text-muted small py-1" data-step="keyword">
+                                        <i class="bi bi-hourglass-split me-2"></i>
+                                        <span class="step-text">Mencocokkan kata kunci...</span>
+                                    </div>
+                                    <div class="step-item text-muted small py-1" data-step="embedding">
+                                        <i class="bi bi-hourglass-split me-2"></i>
+                                        <span class="step-text">Mencocokkan semantik (embedding)...</span>
+                                    </div>
+                                    <div class="step-item text-muted small py-1" data-step="llm">
+                                        <i class="bi bi-hourglass-split me-2"></i>
+                                        <span class="step-text">Menggunakan LLM...</span>
                                     </div>
                                     <div class="step-item text-muted small py-1" data-step="sql">
                                         <i class="bi bi-hourglass-split me-2"></i>
@@ -176,13 +215,13 @@
                                         <i class="bi bi-hourglass-split me-2"></i>
                                         <span class="step-text">Menjalankan query ke database...</span>
                                     </div>
-                                    <div class="step-item text-muted small py-1" data-step="jawaban">
-                                        <i class="bi bi-hourglass-split me-2"></i>
-                                        <span class="step-text">Menyusun jawaban...</span>
-                                    </div>
                                     <div class="step-item text-muted small py-1" data-step="insight">
                                         <i class="bi bi-hourglass-split me-2"></i>
                                         <span class="step-text">Menganalisis insight...</span>
+                                    </div>
+                                    <div class="step-item text-muted small py-1" data-step="jawaban">
+                                        <i class="bi bi-hourglass-split me-2"></i>
+                                        <span class="step-text">Menyusun jawaban...</span>
                                     </div>
                                 </div>
                                 <p class="mt-2 text-muted small">

@@ -1,12 +1,14 @@
-"""Database service khusus BP Batam (Oracle).
+"""Database service — Oracle (BP Batam) + SQLite (dev).
 
-Menggabungkan template resolver, validator, dan BPClient.
-Engine dibuat lazy (hanya saat execute pertama).
+Menggabungkan template resolver, validator, dan DB client.
+DB type dipilih via config DB_TYPE (oracle/sqlite).
 """
 
 import re
 
+from app.core.config import DB_TYPE
 from app.database.bp_client import BPClient
+from app.database.sqlite_client import SQLiteClient
 from app.intents.loader import get_intent
 from app.sql.validator import SQLValidator
 
@@ -18,13 +20,18 @@ class DatabaseConnectionError(Exception):
 class BPDatabaseService:
     def __init__(self):
         self.validator = SQLValidator()
-        self._client = None
+        self._oracle = None
+        self._sqlite = None
 
     @property
     def client(self):
-        if self._client is None:
-            self._client = BPClient()
-        return self._client
+        if DB_TYPE == "sqlite":
+            if self._sqlite is None:
+                self._sqlite = SQLiteClient()
+            return self._sqlite
+        if self._oracle is None:
+            self._oracle = BPClient()
+        return self._oracle
 
     def generate_sql(self, payload: dict) -> str:
         intent_id = payload.get("intent", "")
@@ -46,6 +53,7 @@ class BPDatabaseService:
         try:
             return self.client.execute(sql)
         except Exception as e:
+            db_name = "SQLite" if DB_TYPE == "sqlite" else "Oracle BP Batam"
             raise DatabaseConnectionError(
-                f"Gagal terhubung ke database BP Batam: {e}"
+                f"Gagal terhubung ke database {db_name}: {e}"
             ) from e

@@ -1,0 +1,9 @@
+INFO:     127.0.0.1:65321 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65321 - "GET /static/app.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65532 - "GET /static/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65321 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61236 - "GET /static/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51035 - "GET /api/query/stream?message=Izin%20terbit%20BP%20Batam&intent_provider=cloud&insight_provider=deterministic&insight_llm_provider=local HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58564 - "GET /api/query/stream?message=Total%20backlog%20BP%20Batam&intent_provider=cloud&insight_provider=llm&insight_llm_provider=local HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58564 - "GET /api/query/stream?message=Total%20backlog%20BP%20Batam&intent_provider=cloud&insight_provider=llm&insight_llm_provider=cloud HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60725 - "GET /api/query/stream?message=Izin%20dalam%20proses%20BP%20Batam&intent_provider=cloud&insight_provider=llm&insight_llm_provider=cloud HTTP/1.1" 200 OK

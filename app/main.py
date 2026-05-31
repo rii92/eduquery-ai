@@ -9,7 +9,7 @@ from app.api.query import router as query_router
 from app.api.config import router as config_router
 from app.api.intents import router as intents_router
 
-app = FastAPI(title="EduQuery AI — BP Batam")
+app = FastAPI(title="EduQuery AI — BP Batam", version="2.0.0")
 
 static_dir = Path(__file__).resolve().parent.parent / "static"
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
