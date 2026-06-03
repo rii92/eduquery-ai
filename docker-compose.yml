@@ -2,15 +2,15 @@ services:
   app:
     build: .
     container_name: eduquery-app
+    restart: unless-stopped
     env_file:
       - .env
     environment:
       TZ: Asia/Jakarta
-      APP_PORT: ${APP_PORT}
     ports:
-      - "${APP_PORT}:8000"
-    volumes:
-      - ./app:/app/app
-      - ./static:/app/static
-      - ./prompts:/app/prompts
-    command: ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+      - "${APP_PORT:-8000}:8000"
+    # volumes:
+    #   # Uncomment untuk development (hot-reload tanpa rebuild)
+    #   - ./app:/app/app
+    #   - ./static:/app/static
+    #   - ./prompts:/app/prompts

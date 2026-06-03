@@ -144,6 +144,51 @@ Konfigurasi via `.env` (lihat `.env.example` untuk template):
 └── uv.lock
 ```
 
+## Docker
+
+Build image dan jalankan container:
+
+```bash
+docker compose up -d --build
+```
+
+Container akan berjalan di `http://localhost:8000` (atau sesuai `APP_PORT` di `.env`).
+
+### Konfigurasi
+
+- **Environment**: File `.env` dibaca otomatis oleh Docker Compose — salin `.env.example` ke `.env` dan sesuaikan kredensial Oracle.
+- **Port**: Gunakan variabel `APP_PORT` di `.env` untuk mengubah port host (default: `8000`).
+- **Restart**: Container akan restart otomatis jika crash atau Docker daemon restart (`restart: unless-stopped`).
+
+### Volume Mount (Development)
+
+Volume mount memungkinkan perubahan kode langsung terlihat tanpa rebuild image:
+| Volume Host | Container  | Fungsi |
+|-------------|------------|--------|
+| `./app`     | `/app/app` | Kode Python |
+| `./static`  | `/app/static` | Frontend |
+| `./prompts` | `/app/prompts` | Intent definitions |
+
+> **⚠️ Production**: Hapus volume mount ini atau ganti ke `:ro` (read-only). Rebuild image untuk deploy.
+
+### Production Build
+
+```bash
+# Build tanpa cache
+docker compose build --no-cache
+
+# Jalankan di background
+docker compose up -d
+
+# Lihat log
+docker compose logs -f
+```
+
+### Catatan
+
+- Image menggunakan `python:3.12-slim`. Jika `sentence-transformers` error, kemungkinan library sistem (libomp, dll.) kurang. Tambahkan ke `apt-get install` di `Dockerfile` jika perlu.
+- Container internal selalu listen di port `8000`. Mapping port host diatur via `APP_PORT` di `.env`.
+
 ## Tech Stack
 
 - **Backend**: Python 3.11+, FastAPI, Uvicorn
