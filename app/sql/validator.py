@@ -3,6 +3,9 @@ import re
 class SQLValidator:
     ALLOWED_TABLES = [
         "bi_mart_status_perizinan",
+        "bi_h_mon",
+        "bi_h_oss",
+        "bi_t_bsw",
     ]
     FORBIDDEN = ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER"]
 

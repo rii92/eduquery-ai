@@ -346,6 +346,120 @@
         ],
         "facts_to_use": ["ranking", "row_count", "filters", "numeric"]
       },
+      "bp_beban_level_staf": {
+        "insight_patterns": [
+          "Total {total} dokumen ditangani oleh seluruh staf."
+        ],
+        "bullet_patterns": [
+          "Total beban: {total} dokumen.",
+          "Saran: filter per staf untuk melihat beban individu."
+        ],
+        "facts_to_use": ["numeric", "row_count", "filters"]
+      },
+      "bp_dalam_jam_kerja": {
+        "insight_patterns": [
+          "Total {total} aktivitas dalam jam kerja pada {period_count} hari."
+        ],
+        "bullet_patterns": [
+          "Terakhir ({latest_period}): {latest_value} aktivitas.",
+          "Rentang per hari: {min_value}–{max_value}.",
+          "Saran: bandingkan dengan luar jam kerja untuk rasio produktivitas."
+        ],
+        "facts_to_use": ["series", "filters", "row_count", "numeric"]
+      },
+      "bp_luar_jam_kerja": {
+        "insight_patterns": [
+          "Total {total} aktivitas di luar jam kerja pada {period_count} hari."
+        ],
+        "bullet_patterns": [
+          "Terakhir ({latest_period}): {latest_value} aktivitas.",
+          "Rentang per hari: {min_value}–{max_value}.",
+          "Saran: evaluasi perlunya lembur atau penambahan staf."
+        ],
+        "facts_to_use": ["series", "filters", "row_count", "numeric"]
+      },
+      "bp_beban_dokumen_per_staf": {
+        "insight_patterns": [
+          "{row_count} staf tercatat dengan total {total} dokumen."
+        ],
+        "bullet_patterns": [
+          "Staf dengan beban tertinggi: {top_entity} = {top_value} dokumen.",
+          "Saran: perhatikan staf dengan beban ekstrem untuk redistribusi kerja."
+        ],
+        "facts_to_use": ["ranking", "filters", "row_count", "numeric"]
+      },
+      "bp_komposisi_waktu_kerja": {
+        "insight_patterns": [
+          "{row_count} kategori waktu kerja dengan total {total} aktivitas."
+        ],
+        "bullet_patterns": [
+          "Dalam Jam Kerja: menunggu data.",
+          "Saran: filter per bulan untuk melihat tren."
+        ],
+        "facts_to_use": ["ranking", "filters", "row_count", "numeric"]
+      },
+      "bp_rapor_evaluasi_staf": {
+        "insight_patterns": [
+          "{row_count} staf dievaluasi dengan total {total} dokumen."
+        ],
+        "bullet_patterns": [
+          "Staf dengan kinerja tertinggi: {top_entity}.",
+          "Saran: berikan pelatihan untuk staf dengan beban tinggi dan penyelesaian rendah."
+        ],
+        "facts_to_use": ["ranking", "filters", "row_count", "numeric"]
+      },
+      "bp_total_masuk_reklame": {
+        "insight_patterns": [
+          "Total {total} permohonan reklame masuk pada {period_count} bulan."
+        ],
+        "bullet_patterns": [
+          "Terakhir ({latest_period}): {latest_value} permohonan.",
+          "Rentang per bulan: {min_value}–{max_value}.",
+          "Saran: filter per jenis reklame untuk data lebih spesifik."
+        ],
+        "facts_to_use": ["series", "filters", "row_count", "numeric"]
+      },
+      "bp_kadaluarsa_reklame": {
+        "insight_patterns": [
+          "Total {total} reklame kadaluarsa pada {period_count} bulan."
+        ],
+        "bullet_patterns": [
+          "Terakhir ({latest_period}): {latest_value} kadaluarsa.",
+          "Rentang per bulan: {min_value}–{max_value}.",
+          "Saran: segera tindak lanjuti reklame kadaluarsa."
+        ],
+        "facts_to_use": ["series", "filters", "row_count", "numeric"]
+      },
+      "bp_tanggal_kosong_reklame": {
+        "insight_patterns": [
+          "Total {total} reklame dengan tanggal kosong pada {period_count} bulan."
+        ],
+        "bullet_patterns": [
+          "Terakhir ({latest_period}): {latest_value}.",
+          "Saran: perbarui data tanggal untuk reklame yang kosong."
+        ],
+        "facts_to_use": ["series", "filters", "row_count", "numeric"]
+      },
+      "bp_rasio_masa_berlaku_reklame": {
+        "insight_patterns": [
+          "{row_count} kategori masa berlaku reklame."
+        ],
+        "bullet_patterns": [
+          "Kategori terbanyak: {top_entity} = {top_value}.",
+          "Saran: prioritaskan penanganan reklame yang segera habis dan kadaluarsa."
+        ],
+        "facts_to_use": ["ranking", "filters", "row_count", "numeric"]
+      },
+      "bp_daftar_tagihan_perpanjangan": {
+        "insight_patterns": [
+          "{row_count} reklame perlu perpanjangan."
+        ],
+        "bullet_patterns": [
+          "Total tagihan prioritas: {total}.",
+          "Saran: urutkan berdasarkan tanggal berakhir untuk prioritas tindak lanjut."
+        ],
+        "facts_to_use": ["ranking", "filters", "row_count", "numeric"]
+      },
       "_default": {
         "insight_patterns": [
           "{row_count} baris hasil."

@@ -205,5 +205,166 @@
     ],
     "active": true,
     "source": "bp"
+  },
+  {
+    "id": "bp_beban_level_staf",
+    "description": "BP Batam: Total beban level staf (verifikator) berdasarkan jumlah dokumen",
+    "sql_template": "SELECT\n    COUNT(DISTINCT NO_PERMOHONAN) AS TOTAL_BEBAN\nFROM US_DWH.BI_H_MON\nWHERE VERIFIKATOR IS NOT NULL\n  AND REGEXP_LIKE(VERIFIKATOR, '^[A-Z][A-Z_]{1,19}$')\n  AND {tgl_status}\n  AND {staff}",
+    "params": {
+      "tgl_status": "Filter tanggal status (contoh: TGL_STATUS >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "staff": "Filter nama staf/verifikator (contoh: VERIFIKATOR = 'NAMA_STAF')"
+    },
+    "examples": [
+      "Total beban level staf BP Batam",
+      "Berapa beban kerja verifikator?"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_dalam_jam_kerja",
+    "description": "BP Batam: Aktivitas verifikator dalam jam kerja (08:00-17:00, Senin-Jumat)",
+    "sql_template": "SELECT\n    TRUNC(ACTION_TIME, 'DD') AS TANGGAL,\n    COUNT(*) AS JUMLAH\nFROM US_DWH.BI_H_OSS\nWHERE USER_PROCESS IS NOT NULL\n  AND REGEXP_LIKE(USER_PROCESS, '^[A-Z][A-Z_]{1,19}$')\n  AND TO_NUMBER(TO_CHAR(ACTION_TIME, 'HH24')) >= 8\n  AND TO_NUMBER(TO_CHAR(ACTION_TIME, 'HH24')) < 17\n  AND TO_CHAR(ACTION_TIME, 'DY', 'NLS_DATE_LANGUAGE=AMERICAN') NOT IN ('SAT', 'SUN')\n  AND {action_time}\nGROUP BY TRUNC(ACTION_TIME, 'DD')\nORDER BY TANGGAL ASC",
+    "params": {
+      "action_time": "Filter waktu aksi (contoh: ACTION_TIME >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": [
+      "Aktivitas dalam jam kerja BP Batam",
+      "Dokumen diproses jam kerja"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_luar_jam_kerja",
+    "description": "BP Batam: Aktivitas verifikator di luar jam kerja",
+    "sql_template": "SELECT\n    TRUNC(ACTION_TIME, 'DD') AS TANGGAL,\n    COUNT(*) AS JUMLAH\nFROM US_DWH.BI_H_OSS\nWHERE USER_PROCESS IS NOT NULL\n  AND REGEXP_LIKE(USER_PROCESS, '^[A-Z][A-Z_]{1,19}$')\n  AND NOT (\n        TO_NUMBER(TO_CHAR(ACTION_TIME, 'HH24')) >= 8\n    AND TO_NUMBER(TO_CHAR(ACTION_TIME, 'HH24')) < 17\n    AND TO_CHAR(ACTION_TIME, 'DY', 'NLS_DATE_LANGUAGE=AMERICAN') NOT IN ('SAT', 'SUN')\n  )\n  AND {action_time}\nGROUP BY TRUNC(ACTION_TIME, 'DD')\nORDER BY TANGGAL ASC",
+    "params": {
+      "action_time": "Filter waktu aksi (contoh: ACTION_TIME >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": [
+      "Aktivitas luar jam kerja BP Batam",
+      "Dokumen diproses di luar jam kerja"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_beban_dokumen_per_staf",
+    "description": "BP Batam: Beban dokumen per staf verifikator",
+    "sql_template": "SELECT\n    VERIFIKATOR AS NAMA_STAF,\n    COUNT(DISTINCT NO_PERMOHONAN) AS TOTAL_DOKUMEN,\n    SUM(CASE WHEN STATUS IN ('SELESAI','TERBIT','APPROVED','IZIN TERBIT') THEN 1 ELSE 0 END) AS SELESAI,\n    SUM(CASE WHEN STATUS IN ('DITOLAK','REJECTED','PENOLAKAN') THEN 1 ELSE 0 END) AS DITOLAK,\n    COUNT(DISTINCT NO_PERMOHONAN)\n    - SUM(CASE WHEN STATUS IN ('SELESAI','TERBIT','APPROVED','IZIN TERBIT') THEN 1 ELSE 0 END)\n    - SUM(CASE WHEN STATUS IN ('DITOLAK','REJECTED','PENOLAKAN') THEN 1 ELSE 0 END) AS DALAM_PROSES\nFROM US_DWH.BI_H_MON\nWHERE VERIFIKATOR IS NOT NULL\n  AND REGEXP_LIKE(VERIFIKATOR, '^[A-Z][A-Z_]{1,19}$')\n  AND {tgl_status}\nGROUP BY VERIFIKATOR\nORDER BY TOTAL_DOKUMEN DESC",
+    "params": {
+      "tgl_status": "Filter tanggal status (contoh: TGL_STATUS >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": [
+      "Beban dokumen per staf BP Batam",
+      "Dokumen verifikasi per staf"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_komposisi_waktu_kerja",
+    "description": "BP Batam: Komposisi waktu kerja staf (dalam vs luar jam kerja)",
+    "sql_template": "SELECT\n    KATEGORI_WAKTU,\n    COUNT(*) AS JUMLAH\nFROM (\n    SELECT\n        CASE\n            WHEN TO_NUMBER(TO_CHAR(ACTION_TIME, 'HH24')) >= 8\n             AND TO_NUMBER(TO_CHAR(ACTION_TIME, 'HH24')) < 17\n             AND TO_CHAR(ACTION_TIME, 'DY') NOT IN ('SAT','SUN')\n            THEN 'Dalam Jam Kerja'\n            ELSE 'Luar Jam Kerja'\n        END AS KATEGORI_WAKTU\n    FROM US_DWH.BI_H_OSS\n    WHERE USER_PROCESS IS NOT NULL\n      AND REGEXP_LIKE(USER_PROCESS, '^[A-Z][A-Z_]{1,19}$')\n      AND {action_time}\n)\nGROUP BY KATEGORI_WAKTU\nORDER BY JUMLAH DESC",
+    "params": {
+      "action_time": "Filter waktu aksi (contoh: ACTION_TIME >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": [
+      "Komposisi waktu kerja staf BP Batam",
+      "Perbandingan dalam dan luar jam kerja"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_rapor_evaluasi_staf",
+    "description": "BP Batam: Rapor evaluasi khusus level staf (verifikator)",
+    "sql_template": "SELECT\n    ROWNUM AS NO,\n    NAMA_STAF,\n    TOTAL_DOKUMEN,\n    SELESAI,\n    DITOLAK,\n    PERSEN_SELESAI,\n    ANALISIS_BEBAN\nFROM (\n    SELECT\n        VERIFIKATOR AS NAMA_STAF,\n        COUNT(DISTINCT NO_PERMOHONAN) AS TOTAL_DOKUMEN,\n        SUM(CASE WHEN STATUS IN ('SELESAI','TERBIT','APPROVED','IZIN TERBIT') THEN 1 ELSE 0 END) AS SELESAI,\n        SUM(CASE WHEN STATUS IN ('DITOLAK','REJECTED','PENOLAKAN') THEN 1 ELSE 0 END) AS DITOLAK,\n        ROUND(\n            SUM(CASE WHEN STATUS IN ('SELESAI','TERBIT','APPROVED','IZIN TERBIT') THEN 1 ELSE 0 END)\n            / NULLIF(COUNT(DISTINCT NO_PERMOHONAN), 0) * 100\n        , 1) AS PERSEN_SELESAI,\n        CASE\n            WHEN COUNT(DISTINCT NO_PERMOHONAN) > 500 THEN 'Beban Ekstrem (Overload)'\n            WHEN COUNT(DISTINCT NO_PERMOHONAN) > 200 THEN 'Beban Tinggi'\n            WHEN COUNT(DISTINCT NO_PERMOHONAN) > 100 THEN 'Beban Normal'\n            ELSE 'Beban Rendah'\n        END AS ANALISIS_BEBAN\n    FROM US_DWH.BI_H_MON\n    WHERE VERIFIKATOR IS NOT NULL\n      AND REGEXP_LIKE(VERIFIKATOR, '^[A-Z][A-Z_]{1,19}$')\n      AND {tgl_status}\n      AND {staff}\n    GROUP BY VERIFIKATOR\n    ORDER BY TOTAL_DOKUMEN DESC\n)",
+    "params": {
+      "tgl_status": "Filter tanggal status (contoh: TGL_STATUS >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "staff": "Filter nama staf/verifikator (contoh: VERIFIKATOR = 'NAMA_STAF')"
+    },
+    "examples": [
+      "Rapor evaluasi staf BP Batam",
+      "Evaluasi kinerja verifikator"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_total_masuk_reklame",
+    "description": "BP Batam: Total masuk permohonan reklame per bulan",
+    "sql_template": "SELECT\n    TRUNC(TGL_DAFTAR, 'MM') AS BULAN,\n    COUNT(*) AS JUMLAH\nFROM US_DWH.BI_T_BSW\nWHERE TGL_DAFTAR IS NOT NULL\n  AND {tgl_daftar}\n  AND {jenis_reklame}\nGROUP BY TRUNC(TGL_DAFTAR, 'MM')\nORDER BY BULAN ASC",
+    "params": {
+      "tgl_daftar": "Filter tanggal daftar (contoh: TGL_DAFTAR >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "jenis_reklame": "Filter jenis reklame (contoh: JENIS_REKLAME = 'BILLBOARD')"
+    },
+    "examples": [
+      "Total masuk reklame BP Batam",
+      "Permohonan reklame baru"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_kadaluarsa_reklame",
+    "description": "BP Batam: Reklame kadaluarsa per bulan",
+    "sql_template": "SELECT\n    TRUNC(TGL_JATUH_TEMPO, 'MM') AS BULAN,\n    COUNT(*) AS JUMLAH\nFROM US_DWH.BI_T_BSW\nWHERE STATUS_MASA_BERLAKU = '3 - KEDALUWARSA'\n  AND TGL_JATUH_TEMPO IS NOT NULL\n  AND {tgl_jatuh_tempo}\n  AND {jenis_reklame}\nGROUP BY TRUNC(TGL_JATUH_TEMPO, 'MM')\nORDER BY BULAN ASC",
+    "params": {
+      "tgl_jatuh_tempo": "Filter tanggal jatuh tempo (contoh: TGL_JATUH_TEMPO >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "jenis_reklame": "Filter jenis reklame (contoh: JENIS_REKLAME = 'BILLBOARD')"
+    },
+    "examples": [
+      "Reklame kadaluarsa BP Batam",
+      "Jumlah reklame yang kedaluwarsa"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_tanggal_kosong_reklame",
+    "description": "BP Batam: Reklame dengan tanggal kosong per bulan",
+    "sql_template": "SELECT\n    TRUNC(TGL_DAFTAR, 'MM') AS BULAN,\n    COUNT(*) AS JUMLAH\nFROM US_DWH.BI_T_BSW\nWHERE STATUS_MASA_BERLAKU = '4 - TANGGAL KOSONG'\n  AND TGL_DAFTAR IS NOT NULL\n  AND {tgl_daftar}\n  AND {jenis_reklame}\nGROUP BY TRUNC(TGL_DAFTAR, 'MM')\nORDER BY BULAN ASC",
+    "params": {
+      "tgl_daftar": "Filter tanggal daftar (contoh: TGL_DAFTAR >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "jenis_reklame": "Filter jenis reklame (contoh: JENIS_REKLAME = 'BILLBOARD')"
+    },
+    "examples": [
+      "Reklame tanggal kosong BP Batam",
+      "Reklame tanpa tanggal"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_rasio_masa_berlaku_reklame",
+    "description": "BP Batam: Rasio masa berlaku reklame",
+    "sql_template": "SELECT\n    CASE\n        WHEN STATUS_MASA_BERLAKU = '2 - SEGERA HABIS (<= 30 HARI)' THEN 'Segera Habis'\n        WHEN STATUS_MASA_BERLAKU = '3 - KEDALUWARSA' THEN 'Kedaluwarsa'\n        WHEN STATUS_MASA_BERLAKU = '4 - TANGGAL KOSONG' THEN 'Tanggal Kosong'\n        ELSE STATUS_MASA_BERLAKU\n    END AS KATEGORI,\n    COUNT(*) AS JUMLAH\nFROM US_DWH.BI_T_BSW\nWHERE {tgl_daftar}\n  AND {jenis_reklame}\nGROUP BY STATUS_MASA_BERLAKU\nORDER BY JUMLAH DESC",
+    "params": {
+      "tgl_daftar": "Filter tanggal daftar (contoh: TGL_DAFTAR >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "jenis_reklame": "Filter jenis reklame (contoh: JENIS_REKLAME = 'BILLBOARD')"
+    },
+    "examples": [
+      "Rasio masa berlaku reklame BP Batam",
+      "Status masa berlaku reklame"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_daftar_tagihan_perpanjangan",
+    "description": "BP Batam: Daftar tagihan perpanjangan reklame prioritas",
+    "sql_template": "SELECT\n    NAMA_PERUSAHAAN,\n    NO_PERMOHONAN AS NOMOR_SK_REKLAME,\n    TGL_JATUH_TEMPO AS TANGGAL_BERAKHIR,\n    CASE\n        WHEN STATUS_MASA_BERLAKU = '2 - SEGERA HABIS (<= 30 HARI)' THEN 'Segera Habis'\n        WHEN STATUS_MASA_BERLAKU = '3 - KEDALUWARSA' THEN 'Kedaluwarsa'\n        ELSE STATUS_MASA_BERLAKU\n    END AS STATUS,\n    SISA_HARI_BERLAKU,\n    'Sisa ' || SISA_HARI_BERLAKU || ' Hari' AS STATUS_SISA_WAKTU\nFROM US_DWH.BI_T_BSW\nWHERE STATUS_MASA_BERLAKU IN ('2 - SEGERA HABIS (<= 30 HARI)', '3 - KEDALUWARSA')\n  AND TGL_JATUH_TEMPO IS NOT NULL\n  AND {tgl_jatuh_tempo}\n  AND {jenis_reklame}\nORDER BY TGL_JATUH_TEMPO ASC",
+    "params": {
+      "tgl_jatuh_tempo": "Filter tanggal jatuh tempo (contoh: TGL_JATUH_TEMPO >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "jenis_reklame": "Filter jenis reklame (contoh: JENIS_REKLAME = 'BILLBOARD')"
+    },
+    "examples": [
+      "Tagihan perpanjangan reklame BP Batam",
+      "Daftar reklame segera habis"
+    ],
+    "active": true,
+    "source": "bp"
   }
 ]

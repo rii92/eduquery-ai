@@ -57,6 +57,42 @@ def classify_by_keyword(question: str) -> Optional[Dict[str, Any]]:
         else:
             return {"intent": "DMT1_total_izin"}
 
+    # ── BP Batam: Monitoring Staf / Verifikator ──
+    has_staf = re.search(r"staf|verifikator|petugas|staff|beban.*kerja|kinerja", q)
+    has_jam_kerja = re.search(r"jam.?kerja|kerja.*staf|waktu.*kerja|luar.*jam", q)
+    has_evaluasi = re.search(r"evaluasi|rapor|raport|penilaian", q)
+    has_dokumen = re.search(r"dokumen.*staf|beban.*dokumen|dokumen.*verifikator", q)
+
+    if has_bp and (has_staf or has_evaluasi or has_dokumen or has_jam_kerja):
+        if re.search(r"evaluasi|rapor|raport|penilaian.*staf|kinerja.*verifikator", q):
+            return {"intent": "bp_rapor_evaluasi_staf"}
+        if re.search(r"beban.*level|level.*staf|beban.*verifikator|total.*beban.*staf", q):
+            return {"intent": "bp_beban_level_staf"}
+        if re.search(r"dokumen.*staf|beban.*dokumen|dokumen.*per.*staf|dokumen.*verifikator", q):
+            return {"intent": "bp_beban_dokumen_per_staf"}
+        if re.search(r"dalam.*jam.*kerja|jam.*kerja", q):
+            return {"intent": "bp_dalam_jam_kerja"}
+        if re.search(r"luar.*jam.*kerja|di.*luar.*jam", q):
+            return {"intent": "bp_luar_jam_kerja"}
+        if re.search(r"komposisi.*waktu|waktu.*kerja|dalam.*luar.*jam", q):
+            return {"intent": "bp_komposisi_waktu_kerja"}
+        return {"intent": "bp_beban_level_staf"}
+
+    # ── BP Batam: Reklame ──
+    has_reklame = re.search(r"reklame|bsw|billboard|tagihan.*perpanjangan|masa.?berlaku", q)
+    if has_bp and has_reklame:
+        if re.search(r"tagihan.*perpanjangan|perpanjangan.*prioritas|segera.*habis", q):
+            return {"intent": "bp_daftar_tagihan_perpanjangan"}
+        if re.search(r"rasio.*masa.*berlaku|masa.*berlaku.*reklame|status.*masa.*berlaku", q):
+            return {"intent": "bp_rasio_masa_berlaku_reklame"}
+        if re.search(r"kadaluarsa|kedaluwarsa|kadaluwarsa.*reklame|reklame.*kadaluarsa", q):
+            return {"intent": "bp_kadaluarsa_reklame"}
+        if re.search(r"tanggal.*kosong|kosong.*reklame", q):
+            return {"intent": "bp_tanggal_kosong_reklame"}
+        if re.search(r"masuk.*reklame|total.*reklame|permohonan.*reklame", q):
+            return {"intent": "bp_total_masuk_reklame"}
+        return {"intent": "bp_total_masuk_reklame"}
+
     # ── BP Batam intents (time-series / eksekutif) ──
     if has_bp or has_perizinan or has_status or has_izin:
         if re.search(r"(?:total|jumlah).*(?:masuk|masuk.*izin)", q):
