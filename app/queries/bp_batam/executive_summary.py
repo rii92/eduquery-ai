@@ -7,155 +7,49 @@ dengan nilai filter saat eksekusi.
 _PERMIT_TYPES = "'PB', 'PBUMKU', 'PL', 'PKKPRL', 'PPKH'"
 
 _QUERY_RAW = {
-    "total_masuk": {
-        "label": "Total Masuk",
+    "semua_kpi_card": {
+        "label": "all_KPI CARD",
         "sql": """\
-SELECT
-    CAST(TRUNC(TGL_STATUS_TERAKHIR, 'IW') AS TIMESTAMP) AS PERIODE,
-    COUNT(*)                                             AS TOTAL_MASUK
-FROM US_DWH.BI_MART_STATUS_PERIZINAN
-WHERE PERIZINAN IN ('PL', 'PB', 'PBUMKU', 'PKKPRL', 'PB')
-  AND {{tgl_status_terakhir}}
-  AND {{perizinan}}
-GROUP BY TRUNC(TGL_STATUS_TERAKHIR, 'IW')
-ORDER BY TRUNC(TGL_STATUS_TERAKHIR, 'IW') ASC""",
-        "params": {
-            "tgl_status_terakhir": "Filter tanggal (contoh: TGL_STATUS_TERAKHIR >= TO_DATE('2024-01-01','YYYY-MM-DD'))",
-            "perizinan": "Filter jenis izin (contoh: PERIZINAN IN ('PB','PL'))",
-        },
-    },
-    "izin_terbit_per_bulan": {
-        "label": "Izin Terbit per Bulan",
-        "sql": """\
-SELECT
-    CAST(TRUNC(TGL_STATUS_TERAKHIR, 'IW') AS TIMESTAMP) AS PERIODE,
-    COUNT(*)                                             AS IZIN_TERBIT
-FROM US_DWH.BI_MART_STATUS_PERIZINAN
-WHERE KATEGORI_STATUS = 'Terbit'
-  AND PERIZINAN IN ({{PERMIT_TYPES}})
-  AND {{tgl_status_terakhir}}
-  AND {{perizinan}}
-GROUP BY TRUNC(TGL_STATUS_TERAKHIR, 'IW')
-ORDER BY TRUNC(TGL_STATUS_TERAKHIR, 'IW') ASC""",
-        "params": {
-            "tgl_status_terakhir": "Filter tanggal",
-            "perizinan": "Filter jenis izin",
-        },
-    },
-    "total_backlog_per_bulan": {
-        "label": "Total Backlog per Bulan",
-        "sql": """\
-SELECT
-    CAST(TRUNC(TGL_STATUS_TERAKHIR, 'IW') AS TIMESTAMP) AS PERIODE,
-    COUNT(*)                                             AS TOTAL_BACKLOG
-FROM US_DWH.BI_MART_STATUS_PERIZINAN
-WHERE KATEGORI_STATUS NOT IN ('Terbit')
-  AND KATEGORI_STATUS NOT LIKE '%Ditolak%'
-  AND KATEGORI_STATUS NOT LIKE '%Batal%'
-  AND PERIZINAN IN ({{PERMIT_TYPES}})
-  AND {{tgl_status_terakhir}}
-  AND {{perizinan}}
-GROUP BY TRUNC(TGL_STATUS_TERAKHIR, 'IW')
-ORDER BY TRUNC(TGL_STATUS_TERAKHIR, 'IW') ASC""",
-        "params": {
-            "tgl_status_terakhir": "Filter tanggal",
-            "perizinan": "Filter jenis izin",
-        },
-    },
-    "dalam_proses": {
-        "label": "Dalam Proses",
-        "sql": """\
-SELECT
-    TRUNC(TGL_STATUS_TERAKHIR, 'DD') AS TANGGAL,
-    COUNT(*)                          AS JUMLAH_PERMOHONAN
-FROM US_DWH.BI_MART_STATUS_PERIZINAN
-WHERE UPPER(KATEGORI_STATUS) LIKE '%DALAM PROSES%'
-  AND TGL_STATUS_TERAKHIR IS NOT NULL
-  AND PERIZINAN IN ({{PERMIT_TYPES}})
-  AND {{tgl_status_terakhir}}
-  AND {{perizinan}}
-GROUP BY TRUNC(TGL_STATUS_TERAKHIR, 'DD')
-ORDER BY TRUNC(TGL_STATUS_TERAKHIR, 'DD') ASC""",
-        "params": {
-            "tgl_status_terakhir": "Filter tanggal",
-            "perizinan": "Filter jenis izin",
-        },
-    },
-    "sebaran_berdasarkan_jenis_izin": {
-        "label": "Sebaran Berdasarkan Jenis Izin",
-        "sql": """\
-SELECT
-    CASE PERIZINAN
-        WHEN 'PBUMKU' THEN 'PBUMKU'
-        WHEN 'PB'     THEN 'PB'
-        WHEN 'PL'     THEN 'PL'
-        WHEN 'PKKPRL' THEN 'PKKPRL'
-        WHEN 'PPKH'   THEN 'PPKH'
-        ELSE PERIZINAN
-    END AS JENIS_IZIN,
-    CASE
-        WHEN KATEGORI_STATUS = 'Terbit'                       THEN 'Terbit'
-        WHEN KATEGORI_STATUS LIKE '%Tolak%'
-          OR KATEGORI_STATUS LIKE '%Ditolak%'
-          OR KATEGORI_STATUS LIKE '%Rejected%'                THEN 'Tolak'
-        ELSE 'Proses'
-    END AS KELOMPOK_STATUS,
-    COUNT(*) AS JUMLAH
-FROM US_DWH.BI_MART_STATUS_PERIZINAN
-WHERE 1 = 1
-  AND PERIZINAN IN ({{PERMIT_TYPES}})
-  AND {{kategori_status}}
-  AND {{perizinan}}
-  AND {{tgl_status_terakhir}}
-GROUP BY
-    PERIZINAN,
-    CASE
-        WHEN KATEGORI_STATUS = 'Terbit'                       THEN 'Terbit'
-        WHEN KATEGORI_STATUS LIKE '%Tolak%'
-          OR KATEGORI_STATUS LIKE '%Ditolak%'
-          OR KATEGORI_STATUS LIKE '%Rejected%'                THEN 'Tolak'
-        ELSE 'Proses'
-    END
-ORDER BY JUMLAH DESC""",
-        "params": {
-            "kategori_status": "Filter kategori status (contoh: KATEGORI_STATUS = 'Terbit')",
-            "perizinan": "Filter jenis izin",
-            "tgl_status_terakhir": "Filter tanggal",
-        },
-    },
-    "komposisi_keseluruhan_status": {
-        "label": "Komposisi Keseluruhan Status",
-        "sql": """\
-SELECT
-    CAST(TRUNC(TGL_STATUS_TERAKHIR, 'IW') AS TIMESTAMP) AS PERIODE,
-    CASE
-        WHEN KATEGORI_STATUS = 'Terbit'                       THEN 'Terbit'
-        WHEN KATEGORI_STATUS LIKE '%Tolak%'
-          OR KATEGORI_STATUS LIKE '%Ditolak%'
-          OR KATEGORI_STATUS LIKE '%Rejected%'                THEN 'Ditolak'
-        ELSE 'Dalam Proses'
-    END AS KELOMPOK_STATUS,
-    COUNT(*) AS JUMLAH
-FROM US_DWH.BI_MART_STATUS_PERIZINAN
-WHERE {{tgl_status_terakhir}}
-  AND PERIZINAN IN ({{PERMIT_TYPES}})
-  AND {{perizinan}}
-  AND {{kategori_status}}
-GROUP BY
-    TRUNC(TGL_STATUS_TERAKHIR, 'IW'),
-    CASE
-        WHEN KATEGORI_STATUS = 'Terbit'                       THEN 'Terbit'
-        WHEN KATEGORI_STATUS LIKE '%Tolak%'
-          OR KATEGORI_STATUS LIKE '%Ditolak%'
-          OR KATEGORI_STATUS LIKE '%Rejected%'                THEN 'Ditolak'
-        ELSE 'Dalam Proses'
-    END
-ORDER BY TRUNC(TGL_STATUS_TERAKHIR, 'IW') ASC, JUMLAH DESC""",
-        "params": {
-            "tgl_status_terakhir": "Filter tanggal",
-            "perizinan": "Filter jenis izin",
-            "kategori_status": "Filter kategori status",
-        },
+        SELECT 
+            -- 1. Total Seluruh Permohonan
+            COUNT(NO_PERMOHONAN) AS TOTAL_DOKUMEN,
+            
+            -- 2. Total Terbit
+            COALESCE(SUM(CASE WHEN KATEGORI_STATUS = 'TERBIT' THEN 1 ELSE 0 END), 0) AS TOTAL_TERBIT,
+            
+            -- 3. Total Ditolak
+            COALESCE(SUM(CASE WHEN KATEGORI_STATUS = 'TOLAK' THEN 1 ELSE 0 END), 0) AS TOTAL_TOLAK,
+            
+            -- 4. Total Dalam Proses (Sistem / Verifikator)
+            COALESCE(SUM(CASE WHEN KATEGORI_STATUS = 'DALAM PROSES' THEN 1 ELSE 0 END), 0) AS TOTAL_DALAM_PROSES,
+            
+            -- 5. Total Lainnya (Proses Pelaku Usaha untuk PB/PD & Cabut untuk Lalin)
+            COALESCE(SUM(CASE WHEN KATEGORI_STATUS IN ('PROSES PELAKU USAHA', 'CABUT') THEN 1 ELSE 0 END), 0) AS TOTAL_LAINNYA,
+            
+            -- 6. Total Overdue (Statusnya masih proses, tapi SLA sudah lewat)
+            COALESCE(SUM(
+                CASE 
+                    -- A. Logika Overdue Standar (Memperbaiki Typo menjadi 'LEWAT SLA')
+                    WHEN UPPER(JENIS_IZIN) != 'LALIN' AND KATEGORI_STATUS = 'DALAM PROSES' AND STATUS_PENCAPAIAN_SLA = 'LEWAT SLA' THEN 1 
+                    
+                    -- B. Logika Overdue Real-time KHUSUS LALIN (Diadopsi dari kueri OSS)
+                    WHEN UPPER(JENIS_IZIN) = 'LALIN' AND KATEGORI_STATUS = 'DALAM PROSES' AND (
+                        SYSDATE - 
+                        CASE 
+                            WHEN (CAST(TGL_BAYAR_LALIN AS DATE) - TRUNC(CAST(TGL_BAYAR_LALIN AS DATE))) > (16.5 / 24) 
+                                THEN TRUNC(CAST(TGL_BAYAR_LALIN AS DATE)) + 1 + (8 / 24)
+                            WHEN (CAST(TGL_BAYAR_LALIN AS DATE) - TRUNC(CAST(TGL_BAYAR_LALIN AS DATE))) < (8 / 24) 
+                                THEN TRUNC(CAST(TGL_BAYAR_LALIN AS DATE)) + (8 / 24)
+                            ELSE CAST(TGL_BAYAR_LALIN AS DATE)
+                        END
+                    ) * 24 > 24 THEN 1
+                    
+                    ELSE 0 
+                END
+            ), 0) AS TOTAL_OVERDUE
+
+        FROM US_DWH.BI_T_ALL
+        WHERE 1=1""",
     },
 }
 

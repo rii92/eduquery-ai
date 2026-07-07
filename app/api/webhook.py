@@ -51,8 +51,8 @@ async def webhook(msg: WhatsAppMessage):
 
     try:
         result = bp_service.execute(sql)
-    except DatabaseConnectionError as e:
-        return {"reply": f"[ERROR] {e}", "elapsed": round(time.time() - t0, 2)}
+    except DatabaseConnectionError:
+        return {"reply": "Maaf, database sedang tidak tersedia. Silakan coba lagi nanti.", "elapsed": round(time.time() - t0, 2)}
 
     if not result:
         return {"reply": "Data tidak ditemukan.", "elapsed": round(time.time() - t0, 2)}
