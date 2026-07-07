@@ -33,6 +33,10 @@ class QueryRequest(BaseModel):
     tgl_daftar: str = ""
     jenis_reklame: str = ""
     tgl_jatuh_tempo: str = ""
+    pilih_izin: str = ""
+    rentang_tgl_masuk: str = ""
+    filter_tahun: str = ""
+    filter_bulan: str = ""
 
 
 class QueryResponse(BaseModel):
@@ -122,7 +126,8 @@ async def _sse_process(req_data: dict):
 
     # ── Step 6: Terapkan filter ──
     for k in ("tgl_status_terakhir", "perizinan", "kategori_status", "tahun", "bulan",
-              "tgl_status", "staff", "action_time", "tgl_daftar", "jenis_reklame", "tgl_jatuh_tempo"):
+              "tgl_status", "staff", "action_time", "tgl_daftar", "jenis_reklame", "tgl_jatuh_tempo",
+              "pilih_izin", "rentang_tgl_masuk", "filter_tahun", "filter_bulan"):
         v = req_data.get(k, "")
         if v:
             payload[k] = v
@@ -236,7 +241,8 @@ async def query(req: QueryRequest):
 
     # Step 6: Apply filters
     for k in ("tgl_status_terakhir", "perizinan", "kategori_status", "tahun", "bulan",
-              "tgl_status", "staff", "action_time", "tgl_daftar", "jenis_reklame", "tgl_jatuh_tempo"):
+              "tgl_status", "staff", "action_time", "tgl_daftar", "jenis_reklame", "tgl_jatuh_tempo",
+              "pilih_izin", "rentang_tgl_masuk", "filter_tahun", "filter_bulan"):
         v = getattr(req, k, "")
         if v:
             payload[k] = v
@@ -297,6 +303,10 @@ async def query_stream(
     tgl_daftar: str = Query("", description="Filter tanggal daftar (Reklame)"),
     jenis_reklame: str = Query("", description="Filter jenis reklame"),
     tgl_jatuh_tempo: str = Query("", description="Filter tanggal jatuh tempo (Reklame)"),
+    pilih_izin: str = Query("", description="Filter pilih jenis izin (full SQL clause)"),
+    rentang_tgl_masuk: str = Query("", description="Filter rentang tanggal masuk (full SQL clause)"),
+    filter_tahun: str = Query("", description="Filter tahun (contoh: TAHUN = '2025')"),
+    filter_bulan: str = Query("", description="Filter bulan (contoh: BULAN = '01')"),
 ):
     req_data = {
         "message": message,
@@ -314,5 +324,9 @@ async def query_stream(
         "tgl_daftar": tgl_daftar,
         "jenis_reklame": jenis_reklame,
         "tgl_jatuh_tempo": tgl_jatuh_tempo,
+        "pilih_izin": pilih_izin,
+        "rentang_tgl_masuk": rentang_tgl_masuk,
+        "filter_tahun": filter_tahun,
+        "filter_bulan": filter_bulan,
     }
     return StreamingResponse(_sse_process(req_data), media_type="text/event-stream")

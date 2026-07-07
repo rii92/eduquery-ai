@@ -16,5 +16,124 @@
     ],
     "active": true,
     "source": "bp"
+  },
+  {
+    "id": "bp_flow_permohonan",
+    "description": "BP Batam: Alur/Sankey permohonan izin — total ke jenis izin ke status",
+    "sql_template": "WITH FILTERED_DATA AS (\n    SELECT \n        CASE \n            WHEN JENIS_IZIN = 'LALIN' THEN KATEGORI_IZIN_LALIN\n            ELSE JENIS_IZIN\n        END AS KATEGORI_IZIN,\n        CASE\n            WHEN KATEGORI_STATUS IN ('PROSES PELAKU USAHA', 'CABUT') THEN 'PROSES LAIN'\n            ELSE KATEGORI_STATUS\n        END AS TARGET_STATUS,\n        NO_PERMOHONAN\n    FROM US_DWH.BI_T_ALL\n    WHERE 1=1\n      AND {pilih_izin}\n      AND {filter_tahun}\n      AND {filter_bulan}\n      AND {rentang_tgl_masuk}\n),\nAGGREGATED_DATA AS (\n    SELECT \n        KATEGORI_IZIN, TARGET_STATUS, COUNT(NO_PERMOHONAN) AS JUMLAH\n    FROM FILTERED_DATA\n    GROUP BY KATEGORI_IZIN, TARGET_STATUS\n),\nFINAL_FLOW AS (\n    SELECT \n        'TOTAL PERMOHONAN' AS SOURCE, \n        KATEGORI_IZIN AS TARGET, \n        COALESCE(SUM(JUMLAH), 0) AS VALUE,\n        1 AS FLOW_LEVEL\n    FROM AGGREGATED_DATA \n    GROUP BY KATEGORI_IZIN\n    UNION ALL\n    SELECT \n        KATEGORI_IZIN AS SOURCE, \n        TARGET_STATUS AS TARGET, \n        COALESCE(JUMLAH, 0) AS VALUE,\n        2 AS FLOW_LEVEL\n    FROM AGGREGATED_DATA \n    WHERE JUMLAH > 0\n)\nSELECT SOURCE, TARGET, VALUE \nFROM FINAL_FLOW\nORDER BY FLOW_LEVEL ASC, VALUE DESC",
+    "params": {
+      "pilih_izin": "Filter jenis izin (contoh: (UPPER(JENIS_IZIN) = UPPER('PB') OR UPPER(KATEGORI_IZIN_LALIN) = UPPER('PB')))",
+      "filter_tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "filter_bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": [
+      "Flow/Sankey permohonan izin BP Batam",
+      "Alur total permohonan per jenis izin dan status"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_tren_inflow_outflow",
+    "description": "BP Batam: Tren inflow (masuk) vs outflow (terbit) per hari",
+    "sql_template": "SELECT \n    TRUNC(TGL_MASUK) AS TANGGAL,\n    COUNT(NO_PERMOHONAN) AS INFLOW_MASUK,\n    SUM(CASE WHEN UPPER(KATEGORI_STATUS) = 'TERBIT' THEN 1 ELSE 0 END) AS OUTFLOW_TERBIT\nFROM US_DWH.BI_T_ALL\nWHERE TGL_MASUK IS NOT NULL\n  AND {rentang_tgl_masuk}\n  AND {pilih_izin}\n  AND {filter_tahun}\n  AND {filter_bulan}\nGROUP BY TRUNC(TGL_MASUK)\nORDER BY TRUNC(TGL_MASUK) ASC",
+    "params": {
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "pilih_izin": "Filter jenis izin (contoh: UPPER(JENIS_IZIN) = UPPER('PB'))",
+      "filter_tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "filter_bulan": "Filter bulan (contoh: BULAN = '01')"
+    },
+    "examples": [
+      "Tren inflow outflow BP Batam",
+      "Perbandingan masuk dan terbit per hari"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_gauge_performa",
+    "description": "BP Batam: Gauge performa penyelesaian permohonan",
+    "sql_template": "SELECT \n    COALESCE(\n        ROUND(\n            SUM(CASE WHEN KATEGORI_STATUS <> 'DALAM PROSES' THEN 1 ELSE 0 END) \n            / NULLIF(COUNT(NO_PERMOHONAN), 0), \n        4), \n    0) AS PERFORMA_PENYELESAIAN\nFROM US_DWH.BI_T_ALL\nWHERE 1=1\n  AND {pilih_izin}\n  AND {filter_tahun}\n  AND {filter_bulan}\n  AND {rentang_tgl_masuk}",
+    "params": {
+      "pilih_izin": "Filter jenis izin (contoh: (UPPER(JENIS_IZIN) = UPPER('PB') OR UPPER(KATEGORI_IZIN_LALIN) = UPPER('PB')))",
+      "filter_tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "filter_bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": [
+      "Gauge performa BP Batam",
+      "Performa penyelesaian permohonan"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_kepatuhan_sla",
+    "description": "BP Batam: Kepatuhan SLA permohonan izin",
+    "sql_template": "SELECT \n    COALESCE(\n        ROUND(\n            SUM(\n                CASE \n                    WHEN STATUS_PENCAPAIAN_SLA = 'SESUAI SLA' OR KATEGORI_STATUS IN ('PROSES PELAKU USAHA', 'CABUT') THEN 1 \n                    ELSE 0 \n                END\n            ) \n            / NULLIF(COUNT(NO_PERMOHONAN), 0), \n        4), \n    0) AS KEPATUHAN_SLA\nFROM US_DWH.BI_T_ALL\nWHERE 1=1\n  AND {pilih_izin}\n  AND {filter_tahun}\n  AND {filter_bulan}\n  AND {rentang_tgl_masuk}",
+    "params": {
+      "pilih_izin": "Filter jenis izin (contoh: (UPPER(JENIS_IZIN) = UPPER('PB') OR UPPER(KATEGORI_IZIN_LALIN) = UPPER('PB')))",
+      "filter_tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "filter_bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": [
+      "Kepatuhan SLA BP Batam",
+      "SLA permohonan izin"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_funnel_kemacetan",
+    "description": "BP Batam: Analisis kemacetan/funnel permohonan per tahapan proses",
+    "sql_template": "WITH DATA_STATUS AS (\n    SELECT \n        UPPER(JENIS_IZIN) AS JENIS_IZIN, \n        UPPER(STATUS_TERAKHIR) AS STATUS_TERAKHIR,\n        UPPER(KATEGORI_STATUS) AS KATEGORI_STATUS\n    FROM US_DWH.BI_T_ALL\n    WHERE 1=1\n      AND {pilih_izin}\n      AND {filter_tahun}\n      AND {filter_bulan}\n      AND {rentang_tgl_masuk}\n),\nMODE_FUNNEL AS (\n    SELECT \n        CASE \n            WHEN COUNT(DISTINCT JENIS_IZIN) = 1 AND MAX(JENIS_IZIN) IN ('PB', 'PBUMKU', 'PL', 'PKKPRL', 'PPKH', 'LALIN') THEN MAX(JENIS_IZIN) \n            ELSE 'UMUM' \n        END AS TIPE_FUNNEL\n    FROM DATA_STATUS\n),\nLEVELING AS (\n    SELECT D.*, M.TIPE_FUNNEL,\n        CASE \n            WHEN M.TIPE_FUNNEL = 'UMUM' THEN\n                CASE \n                    WHEN STATUS_TERAKHIR LIKE '%TERBIT%' OR STATUS_TERAKHIR LIKE '%DISETUJUI%' OR KATEGORI_STATUS = 'TERBIT' THEN 4\n                    WHEN STATUS_TERAKHIR LIKE '%KEMBALI%' OR STATUS_TERAKHIR LIKE '%PEMBAYARAN%' OR STATUS_TERAKHIR LIKE '%PERBAIKAN%' OR KATEGORI_STATUS = 'PROSES PELAKU USAHA' THEN 3\n                    WHEN STATUS_TERAKHIR LIKE '%VERIFIKASI%' OR STATUS_TERAKHIR LIKE '%RAPAT%' OR STATUS_TERAKHIR LIKE '%STAF%' OR STATUS_TERAKHIR LIKE '%KASIE%' OR STATUS_TERAKHIR LIKE '%DIREKTUR%' OR KATEGORI_STATUS = 'DALAM PROSES' THEN 2\n                    WHEN STATUS_TERAKHIR LIKE '%TOLAK%' OR STATUS_TERAKHIR LIKE '%PENOLAKAN%' OR KATEGORI_STATUS = 'TOLAK' THEN 0 \n                    ELSE 1 \n                END\n            WHEN M.TIPE_FUNNEL IN ('PB', 'PBUMKU') THEN\n                CASE \n                    WHEN STATUS_TERAKHIR LIKE '%TERBIT%' THEN 6\n                    WHEN STATUS_TERAKHIR LIKE '%VERIFIKASI%' THEN 5\n                    WHEN STATUS_TERAKHIR LIKE '%SURVEI%' THEN 4\n                    WHEN STATUS_TERAKHIR LIKE '%PERSETUJUAN%' THEN 3\n                    WHEN STATUS_TERAKHIR LIKE '%KOMITMEN%' THEN 2\n                    WHEN STATUS_TERAKHIR LIKE '%KEMBALI%' OR STATUS_TERAKHIR LIKE '%TOLAK%' OR KATEGORI_STATUS = 'TOLAK' THEN 0 \n                    ELSE 1 \n                END\n            WHEN M.TIPE_FUNNEL = 'PL' THEN\n                CASE \n                    WHEN STATUS_TERAKHIR LIKE '%TERBIT%' THEN 4\n                    WHEN STATUS_TERAKHIR LIKE '%RAPAT%' THEN 3\n                    WHEN STATUS_TERAKHIR LIKE '%TEKNIS%' THEN 2\n                    WHEN STATUS_TERAKHIR LIKE '%TOLAK%' OR KATEGORI_STATUS = 'TOLAK' THEN 0 \n                    ELSE 1 \n                END\n            WHEN M.TIPE_FUNNEL = 'PKKPRL' THEN\n                CASE \n                    WHEN STATUS_TERAKHIR LIKE '%TERBIT%' THEN 7\n                    WHEN STATUS_TERAKHIR LIKE '%PERSETUJUAN%' THEN 6\n                    WHEN STATUS_TERAKHIR LIKE '%RAPAT%' THEN 5\n                    WHEN STATUS_TERAKHIR LIKE '%VERIFIKASI TEKNIS%' OR STATUS_TERAKHIR LIKE '%TEKNIS%' THEN 4\n                    WHEN STATUS_TERAKHIR LIKE '%VERIFIKASI DOKUMEN%' THEN 3\n                    WHEN STATUS_TERAKHIR LIKE '%SPP%' OR STATUS_TERAKHIR LIKE '%BAYAR%' THEN 2\n                    WHEN STATUS_TERAKHIR LIKE '%TOLAK%' OR STATUS_TERAKHIR LIKE '%PENOLAKAN%' OR KATEGORI_STATUS = 'TOLAK' THEN 0 \n                    ELSE 1 \n                END\n            WHEN M.TIPE_FUNNEL = 'PPKH' THEN\n                CASE \n                    WHEN STATUS_TERAKHIR LIKE '%TERBIT%' THEN 5\n                    WHEN STATUS_TERAKHIR LIKE '%DIREKTUR%' THEN 4\n                    WHEN STATUS_TERAKHIR LIKE '%KASIE%' THEN 3\n                    WHEN STATUS_TERAKHIR LIKE '%STAF%' THEN 2\n                    WHEN STATUS_TERAKHIR LIKE '%TOLAK%' OR STATUS_TERAKHIR LIKE '%PENOLAKAN%' OR KATEGORI_STATUS = 'TOLAK' THEN 0 \n                    ELSE 1 \n                END\n            WHEN M.TIPE_FUNNEL = 'LALIN' THEN\n                CASE \n                    WHEN STATUS_TERAKHIR LIKE '%TERBIT%' OR KATEGORI_STATUS = 'TERBIT' THEN 7\n                    WHEN STATUS_TERAKHIR LIKE '%PTSP%' THEN 6\n                    WHEN STATUS_TERAKHIR LIKE '%LALU LINTAS%' OR STATUS_TERAKHIR LIKE '%LALIN%' THEN 5\n                    WHEN STATUS_TERAKHIR LIKE '%KASUBDIT%' THEN 4\n                    WHEN STATUS_TERAKHIR LIKE '%KASI%' OR STATUS_TERAKHIR LIKE '%KEPALA SEKSI%' THEN 3\n                    WHEN STATUS_TERAKHIR LIKE '%STAF%' OR STATUS_TERAKHIR LIKE '%VERIFIKATOR%' THEN 2\n                    WHEN STATUS_TERAKHIR LIKE '%TOLAK%' OR KATEGORI_STATUS = 'TOLAK' THEN 0 \n                    ELSE 1 \n                END\n        END AS LVL\n    FROM DATA_STATUS D\n    CROSS JOIN MODE_FUNNEL M\n),\nCUMULATIVE AS (\n    SELECT 1 AS LVL_ID, COUNT(*) AS JUMLAH FROM LEVELING UNION ALL\n    SELECT 2, COUNT(*) FROM LEVELING WHERE LVL >= 2 UNION ALL\n    SELECT 3, COUNT(*) FROM LEVELING WHERE LVL >= 3 UNION ALL\n    SELECT 4, COUNT(*) FROM LEVELING WHERE LVL >= 4 UNION ALL\n    SELECT 5, COUNT(*) FROM LEVELING WHERE LVL >= 5 UNION ALL\n    SELECT 6, COUNT(*) FROM LEVELING WHERE LVL >= 6 UNION ALL\n    SELECT 7, COUNT(*) FROM LEVELING WHERE LVL >= 7\n),\nLABELS AS (\n    SELECT 'UMUM' AS TIPE, 1 AS LVL_ID, '1. Permohonan Masuk' AS LABEL FROM DUAL UNION ALL\n    SELECT 'UMUM', 2, '2. Dalam Proses' FROM DUAL UNION ALL\n    SELECT 'UMUM', 3, '3. Proses Pelaku Usaha' FROM DUAL UNION ALL\n    SELECT 'UMUM', 4, '4. Terbit' FROM DUAL UNION ALL\n    SELECT 'PB', 1, '1. Permohonan' FROM DUAL UNION ALL\n    SELECT 'PB', 2, '2. Pemenuhan Komitmen' FROM DUAL UNION ALL\n    SELECT 'PB', 3, '3. Persetujuan' FROM DUAL UNION ALL\n    SELECT 'PB', 4, '4. Survei' FROM DUAL UNION ALL\n    SELECT 'PB', 5, '5. Verifikasi' FROM DUAL UNION ALL\n    SELECT 'PB', 6, '6. Terbit' FROM DUAL UNION ALL\n    SELECT 'PBUMKU', 1, '1. Permohonan' FROM DUAL UNION ALL\n    SELECT 'PBUMKU', 2, '2. Pemenuhan Komitmen' FROM DUAL UNION ALL\n    SELECT 'PBUMKU', 3, '3. Persetujuan' FROM DUAL UNION ALL\n    SELECT 'PBUMKU', 4, '4. Survei' FROM DUAL UNION ALL\n    SELECT 'PBUMKU', 5, '5. Verifikasi' FROM DUAL UNION ALL\n    SELECT 'PBUMKU', 6, '6. Terbit' FROM DUAL UNION ALL\n    SELECT 'PL', 1, '1. Permohonan' FROM DUAL UNION ALL\n    SELECT 'PL', 2, '2. Verifikasi Teknis' FROM DUAL UNION ALL\n    SELECT 'PL', 3, '3. Rapat Pimpinan' FROM DUAL UNION ALL\n    SELECT 'PL', 4, '4. Terbit' FROM DUAL UNION ALL\n    SELECT 'PKKPRL', 1, '1. Permohonan Masuk' FROM DUAL UNION ALL\n    SELECT 'PKKPRL', 2, '2. Pelunasan SPP' FROM DUAL UNION ALL\n    SELECT 'PKKPRL', 3, '3. Verifikasi Dokumen' FROM DUAL UNION ALL\n    SELECT 'PKKPRL', 4, '4. Verifikasi Teknis' FROM DUAL UNION ALL\n    SELECT 'PKKPRL', 5, '5. Rapat Pimpinan' FROM DUAL UNION ALL\n    SELECT 'PKKPRL', 6, '6. Persetujuan KKPRL' FROM DUAL UNION ALL\n    SELECT 'PKKPRL', 7, '7. Terbit' FROM DUAL UNION ALL\n    SELECT 'PPKH', 1, '1. Permohonan Masuk' FROM DUAL UNION ALL\n    SELECT 'PPKH', 2, '2. Staf Pemroses' FROM DUAL UNION ALL\n    SELECT 'PPKH', 3, '3. Kasie Pemroses' FROM DUAL UNION ALL\n    SELECT 'PPKH', 4, '4. Direktur PPKH' FROM DUAL UNION ALL\n    SELECT 'PPKH', 5, '5. Terbit' FROM DUAL UNION ALL\n    SELECT 'LALIN', 1, '1. Dokumen Masuk' FROM DUAL UNION ALL\n    SELECT 'LALIN', 2, '2. Staf / Verifikator' FROM DUAL UNION ALL\n    SELECT 'LALIN', 3, '3. Kepala Seksi' FROM DUAL UNION ALL\n    SELECT 'LALIN', 4, '4. Kasubdit Perizinan' FROM DUAL UNION ALL\n    SELECT 'LALIN', 5, '5. Direktur Lalu Lintas Barang' FROM DUAL UNION ALL\n    SELECT 'LALIN', 6, '6. Direktur PTSP' FROM DUAL UNION ALL\n    SELECT 'LALIN', 7, '7. Izin Terbit' FROM DUAL\n)\nSELECT \n    L.LABEL AS TAHAPAN_PROSES, \n    COALESCE(C.JUMLAH, 0) AS JUMLAH_DOKUMEN \nFROM CUMULATIVE C\nCROSS JOIN MODE_FUNNEL M\nJOIN LABELS L ON C.LVL_ID = L.LVL_ID AND L.TIPE = M.TIPE_FUNNEL\nWHERE L.LABEL IS NOT NULL\nORDER BY L.LVL_ID",
+    "params": {
+      "pilih_izin": "Filter jenis izin (contoh: UPPER(JENIS_IZIN) = UPPER('PB'))",
+      "filter_tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "filter_bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": [
+      "Funnel kemacetan permohonan BP Batam",
+      "Analisis bottleneck tahapan izin"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_proporsi_kerja",
+    "description": "BP Batam: Proporsi kerja staf (dalam vs di luar jam kerja)",
+    "sql_template": "SELECT \n    CASE \n        WHEN UPPER(JENIS_IZIN) NOT IN ('PB', 'PBUMKU', 'PL', 'PPKH', 'PKKPRL') THEN \n            CASE \n                WHEN TO_CHAR(TGL_MASUK, 'DY', 'NLS_DATE_LANGUAGE=ENGLISH') NOT IN ('SAT', 'SUN') \n                AND TO_NUMBER(TO_CHAR(TGL_MASUK, 'HH24MI')) BETWEEN 800 AND 1630 \n                THEN 'Dalam Jam Kerja' \n                ELSE 'Di Luar Jam Kerja' \n            END\n        ELSE \n            CASE \n                WHEN TO_CHAR(TGL_STATUS_TERAKHIR, 'HH24') = '00' THEN 'Dalam Jam Kerja'\n                WHEN TO_CHAR(TGL_STATUS_TERAKHIR, 'HH24MI') BETWEEN 800 AND 1630 THEN 'Dalam Jam Kerja'\n                ELSE 'Di Luar Jam Kerja'\n            END\n    END AS KATEGORI_WAKTU,\n    COUNT(NO_PERMOHONAN) AS JUMLAH_DOKUMEN\nFROM US_DWH.BI_T_ALL\nWHERE 1=1\n  AND (\n      (UPPER(JENIS_IZIN) IN ('PB', 'PBUMKU', 'PL', 'PPKH', 'PKKPRL') AND VERIFIKATOR IS NOT NULL)\n      OR \n      (UPPER(JENIS_IZIN) NOT IN ('PB', 'PBUMKU', 'PL', 'PPKH', 'PKKPRL'))\n  )\n  AND {rentang_tgl_masuk}\n  AND {pilih_izin}\n  AND {filter_tahun}\n  AND {filter_bulan}\nGROUP BY \n    CASE \n        WHEN UPPER(JENIS_IZIN) NOT IN ('PB', 'PBUMKU', 'PL', 'PPKH', 'PKKPRL') THEN \n            CASE \n                WHEN TO_CHAR(TGL_MASUK, 'DY', 'NLS_DATE_LANGUAGE=ENGLISH') NOT IN ('SAT', 'SUN') \n                AND TO_NUMBER(TO_CHAR(TGL_MASUK, 'HH24MI')) BETWEEN 800 AND 1630 \n                THEN 'Dalam Jam Kerja' \n                ELSE 'Di Luar Jam Kerja' \n            END\n        ELSE \n            CASE \n                WHEN TO_CHAR(TGL_STATUS_TERAKHIR, 'HH24') = '00' THEN 'Dalam Jam Kerja'\n                WHEN TO_CHAR(TGL_STATUS_TERAKHIR, 'HH24MI') BETWEEN 800 AND 1630 THEN 'Dalam Jam Kerja'\n                ELSE 'Di Luar Jam Kerja'\n            END\n    END",
+    "params": {
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "pilih_izin": "Filter jenis izin (contoh: UPPER(JENIS_IZIN) = UPPER('PB'))",
+      "filter_tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "filter_bulan": "Filter bulan (contoh: BULAN = '01')"
+    },
+    "examples": [
+      "Proporsi kerja staf BP Batam",
+      "Dalam dan luar jam kerja"
+    ],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_rapor_staf",
+    "description": "BP Batam: Rapor evaluasi staf (skor akhir, performa, produktivitas, SLA)",
+    "sql_template": "WITH STATS_PB AS (\n    SELECT \n        UPPER(TRIM(VERIFIKATOR)) AS NAMA_STAF,\n        COUNT(NO_PERMOHONAN) AS TOTAL_KERJA,\n        SUM(CASE WHEN UPPER(KATEGORI_STATUS) NOT IN ('DALAM PROSES', 'PROSES') THEN 1 ELSE 0 END) AS TOTAL_LOLOS,\n        SUM(CASE WHEN TO_CHAR(TGL_STATUS_TERAKHIR, 'HH24') = '00' \n               OR TO_NUMBER(TO_CHAR(TGL_STATUS_TERAKHIR, 'HH24MI')) BETWEEN 800 AND 1630 \n             THEN 1 ELSE 0 END) AS TOTAL_DALAM_JAM_KERJA,\n        SUM(CASE WHEN UPPER(STATUS_PENCAPAIAN_SLA) IN ('SESUAI SLA', 'MEMENUHI SLA') THEN 1 ELSE 0 END) AS TOTAL_MEMENUHI_SLA\n    FROM US_DWH.BI_T_ALL\n    WHERE VERIFIKATOR IS NOT NULL\n      AND UPPER(JENIS_IZIN) IN ('PB', 'PBUMKU', 'PL', 'PPKH', 'PKKPRL')\n      AND (UPPER(JABATAN_VERIFIKATOR) LIKE '%VERIFIKATOR%' OR UPPER(JABATAN_VERIFIKATOR) LIKE '%STAF%')\n      AND {pilih_izin}\n      AND {filter_tahun}\n      AND {filter_bulan}\n      AND {rentang_tgl_masuk}\n    GROUP BY UPPER(TRIM(VERIFIKATOR))\n),\nSTATS_LALIN AS (\n    SELECT \n        UPPER(TRIM(H.VERIFIKATOR_LOG)) AS NAMA_STAF,\n        COUNT(H.NO_PERMOHONAN) AS TOTAL_KERJA,\n        SUM(CASE WHEN T.STATUS_TERAKHIR NOT IN ('0203020102', '0203020202') THEN 1 ELSE 0 END) AS TOTAL_LOLOS,\n        SUM(CASE WHEN TO_CHAR(H.TGL_LOG, 'DY', 'NLS_DATE_LANGUAGE=ENGLISH') NOT IN ('SAT', 'SUN') \n              AND TO_NUMBER(TO_CHAR(H.TGL_LOG, 'HH24MI')) BETWEEN 800 AND 1630 \n             THEN 1 ELSE 0 END) AS TOTAL_DALAM_JAM_KERJA,\n        SUM(CASE WHEN UPPER(T.STATUS_PENCAPAIAN_SLA) IN ('SESUAI SLA', 'MEMENUHI SLA') THEN 1 ELSE 0 END) AS TOTAL_MEMENUHI_SLA\n    FROM US_DWH.BI_H_ALL H\n    JOIN US_DWH.BI_T_ALL T ON H.NO_PERMOHONAN = T.NO_PERMOHONAN\n    WHERE H.VERIFIKATOR_LOG IS NOT NULL\n      AND UPPER(T.JENIS_IZIN) NOT IN ('PB', 'PBUMKU', 'PL', 'PPKH', 'PKKPRL')\n      AND H.ROLE_ID_LALIN IN ('0203020102', '0203020202')\n      AND {pilih_izin}\n      AND {filter_tahun}\n      AND {filter_bulan}\n      AND {rentang_tgl_masuk}\n    GROUP BY UPPER(TRIM(H.VERIFIKATOR_LOG))\n),\nGABUNGAN AS (\n    SELECT * FROM STATS_PB\n    UNION ALL\n    SELECT * FROM STATS_LALIN\n),\nSTATS_STAF AS (\n    SELECT \n        NAMA_STAF,\n        SUM(TOTAL_KERJA) AS TOTAL_KERJA,\n        SUM(TOTAL_LOLOS) AS TOTAL_LOLOS,\n        SUM(TOTAL_DALAM_JAM_KERJA) AS TOTAL_DALAM_JAM_KERJA,\n        SUM(TOTAL_MEMENUHI_SLA) AS TOTAL_MEMENUHI_SLA\n    FROM GABUNGAN\n    GROUP BY NAMA_STAF\n)\nSELECT \n    NAMA_STAF AS NAMA_STAF,\n    COALESCE(ROUND(\n        (0.4 * (TOTAL_LOLOS / NULLIF(TOTAL_KERJA, 0)) * 100) + \n        (0.3 * (TOTAL_DALAM_JAM_KERJA / NULLIF(TOTAL_KERJA, 0)) * 100) + \n        (0.3 * (TOTAL_MEMENUHI_SLA / NULLIF(TOTAL_KERJA, 0)) * 100)\n    , 2), 0) AS SKOR_AKHIR,\n    COALESCE(ROUND((TOTAL_LOLOS / NULLIF(TOTAL_KERJA, 0)) * 100, 2), 0) AS NILAI_PERFORMA,\n    COALESCE(ROUND((TOTAL_DALAM_JAM_KERJA / NULLIF(TOTAL_KERJA, 0)) * 100, 2), 0) AS NILAI_PRODUKTIVITAS,\n    COALESCE(ROUND((TOTAL_MEMENUHI_SLA / NULLIF(TOTAL_KERJA, 0)) * 100, 2), 0) AS NILAI_SLA,\n    TOTAL_KERJA AS TOTAL_DOKUMEN_KERJA\nFROM STATS_STAF\nORDER BY SKOR_AKHIR DESC\nFETCH FIRST 5 ROWS ONLY",
+    "params": {
+      "pilih_izin": "Filter jenis izin (contoh: UPPER(JENIS_IZIN) = UPPER('PB'))",
+      "filter_tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "filter_bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": [
+      "Rapor staf BP Batam",
+      "Evaluasi kinerja verifikator"
+    ],
+    "active": true,
+    "source": "bp"
   }
 ]

@@ -46,6 +46,76 @@
         ],
         "facts_to_use": ["numeric", "filters", "row_count"]
       },
+      "bp_flow_permohonan": {
+        "insight_patterns": [
+          "{row_count} aliran data pada diagram Sankey."
+        ],
+        "bullet_patterns": [
+          "Total aliran: {row_count} baris.",
+          "Saran: filter jenis izin untuk fokus pada satu kategori."
+        ],
+        "facts_to_use": ["filters", "row_count"]
+      },
+      "bp_tren_inflow_outflow": {
+        "insight_patterns": [
+          "Tren inflow vs outflow pada {period_count} periode."
+        ],
+        "bullet_patterns": [
+          "Terakhir ({latest_period}): inflow {inflow_value}, outflow {outflow_value}.",
+          "Saran: filter rentang tanggal untuk periode spesifik."
+        ],
+        "facts_to_use": ["series", "filters", "row_count", "numeric"]
+      },
+      "bp_gauge_performa": {
+        "insight_patterns": [
+          "Performa penyelesaian: {performa_penyelesaian}."
+        ],
+        "bullet_patterns": [
+          "Skor performa: {performa_penyelesaian}.",
+          "Saran: bandingkan antar jenis izin."
+        ],
+        "facts_to_use": ["numeric", "filters", "row_count"]
+      },
+      "bp_kepatuhan_sla": {
+        "insight_patterns": [
+          "Kepatuhan SLA: {kepatuhan_sla}."
+        ],
+        "bullet_patterns": [
+          "Skor SLA: {kepatuhan_sla}.",
+          "Saran: identifikasi faktor penyebab ketidakpatuhan SLA."
+        ],
+        "facts_to_use": ["numeric", "filters", "row_count"]
+      },
+      "bp_funnel_kemacetan": {
+        "insight_patterns": [
+          "{row_count} tahapan funnel dengan total kemacetan."
+        ],
+        "bullet_patterns": [
+          "Tahapan teratas: {top_entity} = {top_value} dokumen.",
+          "Saran: fokus pada tahap dengan penurunan tertinggi."
+        ],
+        "facts_to_use": ["ranking", "filters", "row_count", "numeric"]
+      },
+      "bp_proporsi_kerja": {
+        "insight_patterns": [
+          "{row_count} kategori proporsi kerja staf."
+        ],
+        "bullet_patterns": [
+          "Kategori terbanyak: {top_entity} = {top_value}.",
+          "Saran: evaluasi keseimbangan beban kerja."
+        ],
+        "facts_to_use": ["ranking", "filters", "row_count", "numeric"]
+      },
+      "bp_rapor_staf": {
+        "insight_patterns": [
+          "{row_count} staf dievaluasi dengan skor akhir."
+        ],
+        "bullet_patterns": [
+          "Staf terbaik: {top_entity} skor {top_value}.",
+          "Saran: berikan pelatihan untuk staf dengan skor rendah."
+        ],
+        "facts_to_use": ["ranking", "filters", "row_count", "numeric"]
+      },
       "_default": {
         "insight_patterns": [
           "{row_count} baris hasil."
