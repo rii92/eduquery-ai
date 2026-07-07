@@ -92,17 +92,27 @@ class InsightService:
                         facts["bottom_value"] = rankings[-1]["value"]
 
         # optional second group-by column (e.g. KELOMPOK_STATUS)
-        if data and len(label_candidates) >= 2:
-            second_label = label_candidates[1]
-            grouped = {}
-            for r in data:
-                key = str(r.get(label_col, ""))
-                sub = str(r.get(second_label, ""))
-                val = r.get(num_col, 0)
-                if key not in grouped:
-                    grouped[key] = {}
-                grouped[key][sub] = val
-            facts["grouped"] = grouped
+        if data and numeric_cols and label_candidates:
+            if len(label_candidates) >= 2:
+                second_label = label_candidates[1]
+                grouped = {}
+                for r in data:
+                    key = str(r.get(label_col, ""))
+                    sub = str(r.get(second_label, ""))
+                    val = r.get(num_col, 0)
+                    if key not in grouped:
+                        grouped[key] = {}
+                    grouped[key][sub] = val
+                facts["grouped"] = grouped
+
+        # individual column values from first row (e.g. TOTAL_DOKUMEN, TOTAL_TERBIT)
+        if data:
+            for k, v in data[0].items():
+                if isinstance(v, (int, float)):
+                    facts[k.lower()] = v
+            td = facts.get("total_dokumen", 0) or 0
+            tt = facts.get("total_terbit", 0) or 0
+            facts["persen_terbit"] = round(tt / td * 100, 1) if td else 0
 
         facts["period_count"] = len(data)
         return facts
