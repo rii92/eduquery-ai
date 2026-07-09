@@ -27,7 +27,7 @@ CLOUD_TITLE = os.getenv("CLOUD_TITLE", "EduQuery AI")
 # ── llama.cpp (Local GPU Server) ──
 LLAMACPP_API_URL = os.getenv("LLAMACPP_API_URL", "http://172.18.32.172:8080/v1")
 LLAMACPP_MODEL = os.getenv("LLAMACPP_MODEL", "ornith-1.0-35b-Q6_K.gguf")
-LLAMACPP_TIMEOUT = int(os.getenv("LLAMACPP_TIMEOUT", "900"))
+LLAMACPP_TIMEOUT = int(os.getenv("LLAMACPP_TIMEOUT", "120"))
 
 # ── Embedding Model ──
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")

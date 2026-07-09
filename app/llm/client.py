@@ -67,6 +67,7 @@ class LLMClient:
                 "HTTP-Referer": CLOUD_REFERER,
                 "X-Title": CLOUD_TITLE,
             },
+            timeout=timeout,
         )
         resp = await client.chat.completions.create(
             model=model,
@@ -85,13 +86,13 @@ class LLMClient:
         client = AsyncOpenAI(
             api_key="",
             base_url=LLAMACPP_API_URL,
+            timeout=timeout,
         )
         resp = await client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": prompt}],
             temperature=temperature,
             max_tokens=max_tokens,
-            timeout=timeout,
         )
         return resp.choices[0].message.content.strip()
 

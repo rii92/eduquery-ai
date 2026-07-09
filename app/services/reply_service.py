@@ -1,7 +1,7 @@
 """LLM-based reply generator — menghasilkan jawaban natural dari data query."""
 
 import json
-from typing import Any
+from typing import Optional
 
 from app.llm.client import LLMClient
 from app.core.json_util import serialize_dates
@@ -24,6 +24,8 @@ async def generate_llm_reply(
     intent: str,
     result: list[dict],
     payload: dict,
+    llm_provider: str = "llamacpp",
+    timeout: int = 120,
 ) -> str:
     label = _INTENT_LABELS.get(intent, intent)
     data_json = json.dumps(serialize_dates(result[:20]), indent=2, ensure_ascii=False)
@@ -54,8 +56,8 @@ INSTRUKSI:
 """
 
     try:
-        llm = LLMClient(provider="llamacpp")
-        raw = await llm.generate(prompt, temperature=0.4, max_tokens=1024)
+        llm = LLMClient(provider=llm_provider)
+        raw = await llm.generate(prompt, temperature=0.4, max_tokens=1024, timeout=timeout)
         return raw.strip()
     except Exception:
         return ""

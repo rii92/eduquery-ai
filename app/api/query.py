@@ -39,6 +39,7 @@ class QueryRequest(BaseModel):
     filter_tahun: str = ""
     filter_bulan: str = ""
     reply_provider: str = "deterministic"
+    reply_llm_provider: str = "llamacpp"
 
 
 class QueryResponse(BaseModel):
@@ -185,9 +186,10 @@ async def _sse_process(req_data: dict):
 
     # ── Step 12: Reply Formatter ──
     reply_provider = req_data.get("reply_provider", "deterministic")
+    reply_llm_provider = req_data.get("reply_llm_provider", "llamacpp")
     if reply_provider == "llm":
-        yield _event({"step": "Menyusun jawaban natural (Ornith)...", "progress": 90})
-        reply = await generate_llm_reply(message, intent, result, payload)
+        yield _event({"step": f"Menyusun jawaban natural ({reply_llm_provider})...", "progress": 90})
+        reply = await generate_llm_reply(message, intent, result, payload, llm_provider=reply_llm_provider, timeout=120)
         if not reply:
             reply = format_bp_reply(payload, result)
     else:
@@ -286,7 +288,7 @@ async def query(req: QueryRequest):
 
     # Step 12: Reply formatter
     if req.reply_provider == "llm":
-        reply = await generate_llm_reply(req.message, intent, result, payload)
+        reply = await generate_llm_reply(req.message, intent, result, payload, llm_provider=req.reply_llm_provider, timeout=120)
         if not reply:
             reply = format_bp_reply(payload, result)
     else:
@@ -322,6 +324,7 @@ async def query_stream(
     filter_tahun: str = Query("", description="Filter tahun (contoh: TAHUN = '2025')"),
     filter_bulan: str = Query("", description="Filter bulan (contoh: BULAN = '01')"),
     reply_provider: str = Query("deterministic", description="Gaya jawaban: deterministic / llm"),
+    reply_llm_provider: str = Query("llamacpp", description="Provider LLM untuk jawaban natural: local / cloud / llamacpp"),
 ):
     req_data = {
         "message": message,
@@ -344,5 +347,6 @@ async def query_stream(
         "filter_tahun": filter_tahun,
         "filter_bulan": filter_bulan,
         "reply_provider": reply_provider,
+        "reply_llm_provider": reply_llm_provider,
     }
     return StreamingResponse(_sse_process(req_data), media_type="text/event-stream")

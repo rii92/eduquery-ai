@@ -93,13 +93,18 @@
                                             <label class="btn btn-outline-success btn-sm insight-llm" for="insightLlamaCpp">Ornith</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-3">
                                         <label class="small fw-semibold text-muted d-block">Gaya Jawaban</label>
-                                        <div class="btn-group btn-group-sm w-100">
-                                            <input type="radio" class="btn-check" name="replyProvider" id="replyDet" value="deterministic" checked>
-                                            <label class="btn btn-outline-secondary btn-sm" for="replyDet">Ringkas</label>
-                                            <input type="radio" class="btn-check" name="replyProvider" id="replyNatural" value="llm">
-                                            <label class="btn btn-outline-secondary btn-sm" for="replyNatural">Natural</label>
+                                        <div class="d-flex gap-1">
+                                            <select id="replyProvider" class="form-select form-select-sm" style="flex:1">
+                                                <option value="deterministic">Ringkas (Template)</option>
+                                                <option value="llm">Natural (LLM)</option>
+                                            </select>
+                                            <select id="replyLlmProvider" class="form-select form-select-sm" style="flex:1">
+                                                <option value="llamacpp">Ornith</option>
+                                                <option value="local">Ollama</option>
+                                                <option value="cloud">Cloud</option>
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="col-md-2">
