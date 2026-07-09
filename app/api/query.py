@@ -11,6 +11,7 @@ from app.llm.client import LLMClient
 from app.services.bp_database_service import BPDatabaseService, DatabaseConnectionError
 from app.services.bp_formatter_service import format_bp_reply
 from app.services.insight_service import InsightService
+from app.services.reply_service import generate_llm_reply
 from app.core.json_util import DateTimeEncoder, serialize_dates
 
 router = APIRouter()
@@ -37,6 +38,7 @@ class QueryRequest(BaseModel):
     rentang_tgl_masuk: str = ""
     filter_tahun: str = ""
     filter_bulan: str = ""
+    reply_provider: str = "deterministic"
 
 
 class QueryResponse(BaseModel):
@@ -181,8 +183,15 @@ async def _sse_process(req_data: dict):
         llm_client = LLMClient(provider=insight_llm_provider)
         llm_insight = await insight_service.llm_narration(llm_client, intent, message, result, det_insight)
 
-    # ── Step 12: Reply Formatter (no model) ──
-    reply = format_bp_reply(payload, result)
+    # ── Step 12: Reply Formatter ──
+    reply_provider = req_data.get("reply_provider", "deterministic")
+    if reply_provider == "llm":
+        yield _event({"step": "Menyusun jawaban natural (Ornith)...", "progress": 90})
+        reply = await generate_llm_reply(message, intent, result, payload)
+        if not reply:
+            reply = format_bp_reply(payload, result)
+    else:
+        reply = format_bp_reply(payload, result)
 
     yield _event({"step": "Menyusun jawaban...", "progress": 95})
     yield _event({
@@ -275,8 +284,13 @@ async def query(req: QueryRequest):
         llm_client = LLMClient(provider=req.insight_llm_provider)
         llm_insight = await insight_service.llm_narration(llm_client, intent, req.message, result, det_insight)
 
-    # Step 12: Reply formatter (no model)
-    reply = format_bp_reply(payload, result)
+    # Step 12: Reply formatter
+    if req.reply_provider == "llm":
+        reply = await generate_llm_reply(req.message, intent, result, payload)
+        if not reply:
+            reply = format_bp_reply(payload, result)
+    else:
+        reply = format_bp_reply(payload, result)
 
     return QueryResponse(
         reply=reply, sql=sql, result=serialize_dates(result),
@@ -307,6 +321,7 @@ async def query_stream(
     rentang_tgl_masuk: str = Query("", description="Filter rentang tanggal masuk (full SQL clause)"),
     filter_tahun: str = Query("", description="Filter tahun (contoh: TAHUN = '2025')"),
     filter_bulan: str = Query("", description="Filter bulan (contoh: BULAN = '01')"),
+    reply_provider: str = Query("deterministic", description="Gaya jawaban: deterministic / llm"),
 ):
     req_data = {
         "message": message,
@@ -328,5 +343,6 @@ async def query_stream(
         "rentang_tgl_masuk": rentang_tgl_masuk,
         "filter_tahun": filter_tahun,
         "filter_bulan": filter_bulan,
+        "reply_provider": reply_provider,
     }
     return StreamingResponse(_sse_process(req_data), media_type="text/event-stream")

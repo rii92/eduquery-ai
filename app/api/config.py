@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app.core.config import (
+    LLAMACPP_API_URL, LLAMACPP_MODEL,
     OLLAMA_MODEL, OLLAMA_HOST,
     CLOUD_MODEL, CLOUD_API_URL, CLOUD_API_KEY, CLOUD_REFERER,
     EMBEDDING_MODEL,
@@ -20,6 +21,8 @@ class ConfigResponse(BaseModel):
     cloud_api_url: str
     cloud_configured: bool
     cloud_referer: str
+    llamacpp_model: str
+    llamacpp_api_url: str
     embedding_model: str
     db_type: str
     sqlite_path: str
@@ -36,6 +39,8 @@ async def get_config():
         cloud_api_url=CLOUD_API_URL,
         cloud_configured=bool(CLOUD_API_KEY),
         cloud_referer=CLOUD_REFERER,
+        llamacpp_model=LLAMACPP_MODEL,
+        llamacpp_api_url=LLAMACPP_API_URL,
         embedding_model=EMBEDDING_MODEL.split("/")[-1] if "/" in EMBEDDING_MODEL else EMBEDDING_MODEL,
         db_type=DB_TYPE,
         sqlite_path=SQLITE_DB_PATH,

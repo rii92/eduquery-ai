@@ -62,9 +62,11 @@ async def webhook(msg: WhatsAppMessage):
 
     llm_insight = ""
     if result:
-        llm_client = LLMClient(provider="local")
-        if await llm_client.check_health():
-            llm_insight = await insight_svc.llm_narration(llm_client, intent, msg.message, result, det_insight)
+        for prov in ("llamacpp", "local"):
+            llm_client = LLMClient(provider=prov)
+            if await llm_client.check_health():
+                llm_insight = await insight_svc.llm_narration(llm_client, intent, msg.message, result, det_insight)
+                break
 
     reply = format_bp_reply(payload, result)
 

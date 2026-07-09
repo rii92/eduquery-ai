@@ -63,8 +63,12 @@ async function submitQuery() {
 
     const intentProvider = getSelectedProvider('intentProvider');
     const insightProvider = getSelectedProvider('insightProvider');
-    const insightLLMProvider = insightProvider === 'llm_cloud' ? 'cloud' : 'local';
-    const actualInsightProvider = insightProvider === 'llm_cloud' ? 'llm' : insightProvider;
+    const replyProvider = getSelectedProvider('replyProvider');
+    let insightLLMProvider = 'local';
+    if (insightProvider === 'llm_cloud') insightLLMProvider = 'cloud';
+    else if (insightProvider === 'llm_llamacpp') insightLLMProvider = 'llamacpp';
+    let actualInsightProvider = insightProvider;
+    if (insightProvider === 'llm_cloud' || insightProvider === 'llm_llamacpp') actualInsightProvider = 'llm';
 
     try {
         showLoading(true);
@@ -74,7 +78,7 @@ async function submitQuery() {
 
         const encoded = encodeURIComponent(question);
         const filterParams = getFilterParams();
-        let url = `/api/query/stream?message=${encoded}&intent_provider=${intentProvider}&insight_provider=${actualInsightProvider}&insight_llm_provider=${insightLLMProvider}`;
+        let url = `/api/query/stream?message=${encoded}&intent_provider=${intentProvider}&insight_provider=${actualInsightProvider}&insight_llm_provider=${insightLLMProvider}&reply_provider=${replyProvider}`;
         if (filterParams) url += '&' + filterParams;
 
         const eventSource = new EventSource(url);

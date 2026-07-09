@@ -73,9 +73,11 @@
                                         <label class="small fw-semibold text-muted d-block">LLM Fallback</label>
                                         <div class="btn-group btn-group-sm w-100">
                                             <input type="radio" class="btn-check" name="intentProvider" id="intentProviderLocal" value="local" checked>
-                                            <label class="btn btn-outline-primary btn-sm" for="intentProviderLocal">Local LLM</label>
+                                            <label class="btn btn-outline-primary btn-sm" for="intentProviderLocal">Ollama</label>
                                             <input type="radio" class="btn-check" name="intentProvider" id="intentProviderCloud" value="cloud">
-                                            <label class="btn btn-outline-primary btn-sm" for="intentProviderCloud">Cloud LLM</label>
+                                            <label class="btn btn-outline-primary btn-sm" for="intentProviderCloud">Cloud</label>
+                                            <input type="radio" class="btn-check" name="intentProvider" id="intentProviderLlamaCpp" value="llamacpp">
+                                            <label class="btn btn-outline-primary btn-sm" for="intentProviderLlamaCpp">Ornith</label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
@@ -84,12 +86,23 @@
                                             <input type="radio" class="btn-check" name="insightProvider" id="insightDet" value="deterministic" checked>
                                             <label class="btn btn-outline-success btn-sm" for="insightDet">Deterministik</label>
                                             <input type="radio" class="btn-check" name="insightProvider" id="insightLocal" value="llm">
-                                            <label class="btn btn-outline-success btn-sm insight-llm" for="insightLocal">Local LLM</label>
+                                            <label class="btn btn-outline-success btn-sm insight-llm" for="insightLocal">Ollama</label>
                                             <input type="radio" class="btn-check" name="insightProvider" id="insightCloud" value="llm_cloud">
-                                            <label class="btn btn-outline-success btn-sm insight-llm" for="insightCloud">Cloud LLM</label>
+                                            <label class="btn btn-outline-success btn-sm insight-llm" for="insightCloud">Cloud</label>
+                                            <input type="radio" class="btn-check" name="insightProvider" id="insightLlamaCpp" value="llm_llamacpp">
+                                            <label class="btn btn-outline-success btn-sm insight-llm" for="insightLlamaCpp">Ornith</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-2">
+                                        <label class="small fw-semibold text-muted d-block">Gaya Jawaban</label>
+                                        <div class="btn-group btn-group-sm w-100">
+                                            <input type="radio" class="btn-check" name="replyProvider" id="replyDet" value="deterministic" checked>
+                                            <label class="btn btn-outline-secondary btn-sm" for="replyDet">Ringkas</label>
+                                            <input type="radio" class="btn-check" name="replyProvider" id="replyNatural" value="llm">
+                                            <label class="btn btn-outline-secondary btn-sm" for="replyNatural">Natural</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
                                         <label class="small fw-semibold text-muted d-block">Filter</label>
                                         <div class="d-flex gap-1">
                                             <select id="filterTgl" class="form-select form-select-sm">
