@@ -15,7 +15,38 @@
       "Total seluruh permohonan izin"
     ],
     "active": true,
-    "source": "bp"
+    "source": "bp",
+    "keyword_patterns": [
+      "kpi",
+      "ringkasan.*permohonan",
+      "seluruh.*izin"
+    ],
+    "llm_label": "Ringkasan KPI seluruh permohonan izin",
+    "insight_template": {
+      "judul": "Ringkasan KPI Seluruh Permohonan Izin",
+      "insight": "Distribusi [TOTAL_DOKUMEN] permohonan menunjukkan komposisi yang dinamis antara output final ([TOTAL_TERBIT] terbit) dan sisa antrean operasional ([TOTAL_DALAM_PROSES] dalam proses). [TOTAL_OVERDUE] sebagai indikator bottleneck kritis memberikan sinyal peringatan dini; jika proporsi overdue ini meningkat terhadap total dokumen, hal ini menandakan adanya structural lag atau hambatan pada tahap verifikasi teknis yang tidak mampu mengimbangi volume masuk. Sinergi antara logika overdue standar dan real-time khusus untuk izin Lalin memastikan pelacakan SLA yang presisi di seluruh lini perizinan.",
+      "rekomendasi": "Gunakan panel Scorecard ini sebagai instrumen navigasi taktis harian untuk mengalokasikan sumber daya secara agile. Segera lakukan deep-dive pada data permohonan yang berkontribusi pada [TOTAL_OVERDUE] untuk membedah akar penyebab keterlambatan—apakah karena kerumitan dokumen spesifik atau beban kerja verifikator yang tidak merata. Rekomendasi strategisnya adalah mengaktifkan dashboard alert khusus untuk setiap penambahan kasus overdue, agar manajemen dapat melakukan redistribusi tugas sebelum hambatan tersebut berdampak pada penurunan reputasi kepatuhan layanan secara instansi."
+    },
+    "intent_rules": {
+      "insight_patterns": [
+        "Total {total_dokumen} dokumen dengan {total_terbit} terbit, {total_tolak} ditolak, {total_dalam_proses} dalam proses, dan {total_overdue} overdue."
+      ],
+      "bullet_patterns": [
+        "Terbit: {total_terbit} dari {total_dokumen} ({persen_terbit}%).",
+        "Ditolak: {total_tolak}.",
+        "Dalam Proses: {total_dalam_proses}.",
+        "Overdue: {total_overdue}.",
+        "Saran: filter per jenis izin atau periode untuk analisis lebih lanjut."
+      ],
+      "facts_to_use": [
+        "numeric",
+        "filters",
+        "row_count"
+      ]
+    },
+    "format_config": {
+      "type": "custom"
+    }
   },
   {
     "id": "bp_flow_permohonan",
@@ -32,7 +63,35 @@
       "Alur total permohonan per jenis izin dan status"
     ],
     "active": true,
-    "source": "bp"
+    "source": "bp",
+    "keyword_patterns": [
+      "flow",
+      "sankey",
+      "alur.*permohonan",
+      "alur.*izin"
+    ],
+    "llm_label": "Diagram alur/Sankey permohonan izin",
+    "insight_template": {
+      "judul": "Diagram Alur/Sankey Permohonan Izin",
+      "insight": "Dari [TOTAL] dokumen berstatus belum tuntas, terlihat distribusi yang menyebar ke berbagai proses internal—mulai dari verifikasi staf, koreksi pelaku usaha, hingga menunggu rapat dan persetujuan pimpinan. Komposisi ini menggambarkan pipeline aktif yang membutuhkan monitoring ketat agar tidak terjadi penumpukan di titik-titik yang memiliki kapasitas pemrosesan terbatas, sehingga berpotensi memunculkan bottleneck baru yang menghambat percepatan penyelesaian.",
+      "rekomendasi": "Sebaiknya dilakukan analisis detail pada aliran yang memiliki volume besar untuk memastikan kapasitas sumber daya manusia dan sistem memadai. Data ini juga dapat dimanfaatkan untuk melakukan simulasi skenario before-after jika diterapkan kebijakan baru, misalnya prioritas penyelesaian berdasarkan usia dokumen atau jenis permohonan tertentu. Penggunaan diagram ini secara berkala akan membantu pimpinan dalam mengambil keputusan berbasis data untuk perbaikan SOP dan alokasi tenaga verifikator secara lebih presisi."
+    },
+    "intent_rules": {
+      "insight_patterns": [
+        "{row_count} aliran data pada diagram Sankey."
+      ],
+      "bullet_patterns": [
+        "Total aliran: {row_count} baris.",
+        "Saran: filter jenis izin untuk fokus pada satu kategori."
+      ],
+      "facts_to_use": [
+        "filters",
+        "row_count"
+      ]
+    },
+    "format_config": {
+      "type": "custom"
+    }
   },
   {
     "id": "bp_tren_inflow_outflow",
@@ -49,7 +108,42 @@
       "Perbandingan masuk dan terbit per hari"
     ],
     "active": true,
-    "source": "bp"
+    "source": "bp",
+    "keyword_patterns": [
+      "tren.*inflow",
+      "tren.*outflow",
+      "inflow.*outflow",
+      "masuk.*terbit.*hari",
+      "perbandingan.*masuk.*terbit",
+      "perbandingan.*inflow.*outflow",
+      "total.*terbit.*hari",
+      "terbit.*hari\\\\s*ini",
+      "masuk.*dan.*terbit"
+    ],
+    "llm_label": "Tren inflow (masuk) vs outflow (terbit) per hari",
+    "insight_template": {
+      "judul": "Tren Inflow vs Outflow per Hari",
+      "insight": "Selama periode [TGL_AWAL] – [TGL_AKHIR], terdapat [TOTAL_INFLOW] dokumen masuk ([INFLOW_MASUK]) dan [TOTAL_OUTFLOW] dokumen terbit ([OUTFLOW_TERBIT]), dengan rata-rata inflow [RATA_INFLOW] dan outflow [RATA_OUTFLOW] per hari. Selisih yang terjadi antara inflow dan outflow menunjukkan adanya [GAP] dokumen yang belum terselesaikan, yang jika terus terakumulasi berpotensi meningkatkan beban kerja dan waktu tunggu penyelesaian.",
+      "rekomendasi": "Lakukan filter berdasarkan jenis izin tertentu untuk melihat perbandingan inflow-outflow yang lebih spesifik dan akurat. Pastikan kapasitas verifikasi harian diselaraskan dengan rata-rata inflow untuk mencegah akumulasi backlog. Data tren ini juga dapat digunakan sebagai bahan evaluasi periodik untuk mengukur efektivitas penyelenggaraan pelayanan perizinan di BP Batam."
+    },
+    "intent_rules": {
+      "insight_patterns": [
+        "Tren inflow vs outflow pada {period_count} periode."
+      ],
+      "bullet_patterns": [
+        "Terakhir ({latest_period}): inflow {inflow_value}, outflow {outflow_value}.",
+        "Saran: filter rentang tanggal untuk periode spesifik."
+      ],
+      "facts_to_use": [
+        "series",
+        "filters",
+        "row_count",
+        "numeric"
+      ]
+    },
+    "format_config": {
+      "type": "custom"
+    }
   },
   {
     "id": "bp_gauge_performa",
@@ -66,7 +160,37 @@
       "Performa penyelesaian permohonan"
     ],
     "active": true,
-    "source": "bp"
+    "source": "bp",
+    "keyword_patterns": [
+      "gauge",
+      "performa.*penyelesaian",
+      "tingkat.*penyelesaian"
+    ],
+    "llm_label": "Gauge performa penyelesaian permohonan",
+    "insight_template": {
+      "judul": "Gauge Performa Penyelesaian Permohonan",
+      "insight": "Capaian [PERFORMA_PENYELESAIAN] pada Gauge Chart ini mencerminkan persentase penyelesaian dari total permohonan yang sudah diproses. Meskipun tidak membedah detail per jenis izin, performa ini memberikan gambaran awal yang cukup representatif mengenai efektivitas penyelesaian di seluruh unit pelayanan—semakin tinggi skornya, semakin baik tingkat penyelesaiannya.",
+      "rekomendasi": "Untuk mendapatkan gambaran yang lebih komprehensif, lakukan analisis detail per jenis izin guna mengidentifikasi sektor mana yang memiliki performa di bawah rata-rata. Apabila terjadi tren penurunan, segera evaluasi SOP dan alokasi sumber daya pada jenis izin yang bermasalah agar performa keseluruhan tetap terjaga."
+    },
+    "intent_rules": {
+      "insight_patterns": [
+        "Performa penyelesaian: {performa_penyelesaian}."
+      ],
+      "bullet_patterns": [
+        "Skor performa: {performa_penyelesaian}.",
+        "Saran: bandingkan antar jenis izin."
+      ],
+      "facts_to_use": [
+        "numeric",
+        "filters",
+        "row_count"
+      ]
+    },
+    "format_config": {
+      "type": "single_value",
+      "title": "Performa Penyelesaian",
+      "value_column": "PERFORMA_PENYELESAIAN"
+    }
   },
   {
     "id": "bp_kepatuhan_sla",
@@ -83,7 +207,37 @@
       "SLA permohonan izin"
     ],
     "active": true,
-    "source": "bp"
+    "source": "bp",
+    "keyword_patterns": [
+      "sla",
+      "kepatuhan.*sla",
+      "ketepatan.*sla"
+    ],
+    "llm_label": "Kepatuhan SLA permohonan izin",
+    "insight_template": {
+      "judul": "Kepatuhan SLA Permohonan Izin",
+      "insight": "Capaian [KEPATUHAN_SLA] pada Gauge Chart ini menggambarkan tingkat kepatuhan layanan terhadap Service Level Agreement yang telah ditetapkan. Angka ini memberikan indikasi awal mengenai kualitas layanan—apakah mayoritas permohonan diselesaikan tepat waktu atau justru mengalami keterlambatan yang dapat mempengaruhi tingkat kepuasan pengguna layanan dan reputasi instansi.",
+      "rekomendasi": "Segera identifikasi permohonan yang tidak memenuhi SLA, terutama yang memiliki nilai overdue tertinggi, untuk ditindaklanjuti secara prioritas. Lakukan analisis penyebab utama ketidakpatuhan SLA—apakah karena lonjakan volume, keterbatasan SDM, atau kerumitan teknis dokumen—sebagai dasar perbaikan berkelanjutan terhadap target SLA di masa mendatang."
+    },
+    "intent_rules": {
+      "insight_patterns": [
+        "Kepatuhan SLA: {kepatuhan_sla}."
+      ],
+      "bullet_patterns": [
+        "Skor SLA: {kepatuhan_sla}.",
+        "Saran: identifikasi faktor penyebab ketidakpatuhan SLA."
+      ],
+      "facts_to_use": [
+        "numeric",
+        "filters",
+        "row_count"
+      ]
+    },
+    "format_config": {
+      "type": "single_value",
+      "title": "Kepatuhan SLA",
+      "value_column": "KEPATUHAN_SLA"
+    }
   },
   {
     "id": "bp_funnel_kemacetan",
@@ -100,7 +254,43 @@
       "Analisis bottleneck tahapan izin"
     ],
     "active": true,
-    "source": "bp"
+    "source": "bp",
+    "keyword_patterns": [
+      "funnel",
+      "kemacetan",
+      "bottleneck",
+      "tahapan.*proses",
+      "analisis.*macet"
+    ],
+    "llm_label": "Analisis kemacetan/funnel per tahapan proses",
+    "insight_template": {
+      "judul": "Analisis Kemacetan/Funnel per Tahapan Proses",
+      "insight": "Funnel ini memetakan transisi [JUMLAH_TOTAL] dokumen yang mengalir dari satu tahapan ke tahapan berikutnya, sehingga terlihat jelas di titik mana terjadi penyempitan atau kemacetan proses. Tahap yang memiliki penurunan jumlah drastis menandakan hambatan serius yang perlu segera diidentifikasi penyebabnya—apakah karena kompleksitas verifikasi, keterbatasan SDM, atau faktor eksternal seperti kelengkapan dokumen dari pemohon.",
+      "rekomendasi": "Lakukan intervensi langsung pada bottleneck utama, misalnya dengan menambah tenaga verifikator di tahap yang paling lambat atau mengoptimalkan sistem antrian digital. Pertimbangkan pula penerapan auto-routing untuk dokumen yang memerlukan verifikasi berulang, sehingga beban kerja staf dapat dikurangi dan waktu siklus penyelesaian dapat dipangkas secara signifikan."
+    },
+    "intent_rules": {
+      "insight_patterns": [
+        "{row_count} tahapan funnel dengan total kemacetan."
+      ],
+      "bullet_patterns": [
+        "Tahapan teratas: {top_entity} = {top_value} dokumen.",
+        "Saran: fokus pada tahap dengan penurunan tertinggi."
+      ],
+      "facts_to_use": [
+        "ranking",
+        "filters",
+        "row_count",
+        "numeric"
+      ]
+    },
+    "format_config": {
+      "type": "table",
+      "title": "Analisis Kemacetan (Funnel)",
+      "columns": [
+        "TAHAPAN_PROSES",
+        "JUMLAH_DOKUMEN"
+      ]
+    }
   },
   {
     "id": "bp_proporsi_kerja",
@@ -117,7 +307,42 @@
       "Dalam dan luar jam kerja"
     ],
     "active": true,
-    "source": "bp"
+    "source": "bp",
+    "keyword_patterns": [
+      "proporsi.*kerja",
+      "jam.*kerja",
+      "waktu.*kerja",
+      "dalam.*luar.*jam"
+    ],
+    "llm_label": "Proporsi kerja staf dalam vs luar jam kerja",
+    "insight_template": {
+      "judul": "Proporsi Kerja Staf Dalam/Luar Jam Kerja",
+      "insight": "Proporsi [KATEGORI_DALAM] dan [KATEGORI_LUAR] mencerminkan beban dan pola kerja staf dalam menangani permohonan izin. [PERSEN_DALAM]% pekerjaan dilakukan dalam jam kerja formal ([KATEGORI_DALAM]), sementara [PERSEN_LUAR]% dilakukan di luar jam kerja ([KATEGORI_LUAR]). Tingginya aktivitas di luar jam kerja dapat mengindikasikan ketidakseimbangan antara kapasitas SDM dengan volume pekerjaan yang harus diselesaikan.",
+      "rekomendasi": "Evaluasi kembali distribusi beban kerja dan pertimbangkan penyesuaian jam kerja fleksibel atau penambahan SDM jika proporsi luar jam kerja terus meningkat. Selain itu, berikan apresiasi atau insentif bagi staf yang menunjukkan dedikasi tinggi, namun pastikan hal ini tidak menjadi pola permanen yang berisiko menurunkan kesejahteraan dan produktivitas jangka panjang."
+    },
+    "intent_rules": {
+      "insight_patterns": [
+        "{row_count} kategori proporsi kerja staf."
+      ],
+      "bullet_patterns": [
+        "Kategori terbanyak: {top_entity} = {top_value}.",
+        "Saran: evaluasi keseimbangan beban kerja."
+      ],
+      "facts_to_use": [
+        "ranking",
+        "filters",
+        "row_count",
+        "numeric"
+      ]
+    },
+    "format_config": {
+      "type": "table",
+      "title": "Proporsi Kerja Staf",
+      "columns": [
+        "KATEGORI_WAKTU",
+        "JUMLAH_DOKUMEN"
+      ]
+    }
   },
   {
     "id": "bp_rapor_staf",
@@ -134,6 +359,46 @@
       "Evaluasi kinerja verifikator"
     ],
     "active": true,
-    "source": "bp"
+    "source": "bp",
+    "keyword_patterns": [
+      "rapor.*staf",
+      "evaluasi.*staf",
+      "kinerja.*verifikator",
+      "skor.*staf",
+      "nilai.*staf"
+    ],
+    "llm_label": "Rapor evaluasi staf (skor akhir, performa, produktivitas, SLA)",
+    "insight_template": {
+      "judul": "Rapor Evaluasi Kinerja Staf",
+      "insight": "Leaderboard 5 kinerja teratas menunjukkan kisaran skor akhir antara [SKOR_MIN] hingga [SKOR_MAX], dengan rata-rata [SKOR_RATA]. Selisih yang cukup lebar antara staf terbaik dan terendah mengindikasikan adanya variasi kompetensi atau beban kerja yang belum merata. Staf dengan skor tinggi umumnya unggul di aspek [ASPEK_UNGGULAN] dan menjadi tolok ukur bagi staf lainnya.",
+      "rekomendasi": "Gunakan data ini untuk menyusun program best practice sharing, di mana staf dengan skor tertinggi dapat menjadi mentor bagi rekan-rekan yang membutuhkan peningkatan di aspek tertentu. Berikan pelatihan terarah kepada staf dengan skor rendah, terutama pada indikator yang paling berkontribusi terhadap skor akhir, dan lakukan monitoring berkala untuk mengukur efektivitas intervensi yang telah dilakukan."
+    },
+    "intent_rules": {
+      "insight_patterns": [
+        "{row_count} staf dievaluasi dengan skor akhir."
+      ],
+      "bullet_patterns": [
+        "Staf terbaik: {top_entity} skor {top_value}.",
+        "Saran: berikan pelatihan untuk staf dengan skor rendah."
+      ],
+      "facts_to_use": [
+        "ranking",
+        "filters",
+        "row_count",
+        "numeric"
+      ]
+    },
+    "format_config": {
+      "type": "table",
+      "title": "Rapor Staf (Top 5)",
+      "columns": [
+        "NAMA_STAF",
+        "SKOR_AKHIR",
+        "NILAI_PERFORMA",
+        "NILAI_PRODUKTIVITAS",
+        "NILAI_SLA",
+        "TOTAL_DOKUMEN_KERJA"
+      ]
+    }
   }
 ]

@@ -65,7 +65,7 @@
 
   <!-- Modal Tambah/Edit -->
   <div class="modal fade" id="intentModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header bg-primary text-white">
           <h5 class="modal-title" id="modalTitle"><i class="bi bi-pencil me-1"></i> Intent</h5>
@@ -73,29 +73,148 @@
         </div>
         <div class="modal-body">
           <input type="hidden" id="editId">
-          <div class="mb-2">
-            <label class="form-label small fw-semibold">ID Intent</label>
-            <input type="text" id="intentId" class="form-control" placeholder="contoh: count_graduates">
-          </div>
-          <div class="mb-2">
-            <label class="form-label small fw-semibold">Deskripsi</label>
-            <input type="text" id="intentDesc" class="form-control" placeholder="contoh: Jumlah siswa lulus">
-          </div>
-          <div class="mb-2">
-            <label class="form-label small fw-semibold">SQL Template</label>
-            <textarea id="intentSql" class="form-control font-monospace small" rows="3" placeholder="SELECT COUNT(*) FROM students WHERE status='lulus';"></textarea>
-          </div>
-          <div class="mb-2">
-            <label class="form-label small fw-semibold">Parameter <small class="text-muted">(format: nama_param:deskripsi, satu per baris)</small></label>
-            <textarea id="intentParams" class="form-control small" rows="3" placeholder="kelas:Nama kelas&#10;subject:Mata pelajaran"></textarea>
-          </div>
-          <div class="mb-2">
-            <label class="form-label small fw-semibold">Contoh Pertanyaan <small class="text-muted">(satu per baris)</small></label>
-            <textarea id="intentExamples" class="form-control small" rows="2" placeholder="Berapa siswa lulus?"></textarea>
-          </div>
-          <div class="form-check">
-            <input type="checkbox" id="intentActive" class="form-check-input" checked>
-            <label class="form-check-label small" for="intentActive">Aktif</label>
+
+          <!-- ── Accordion ── -->
+          <div class="accordion" id="formAccordion">
+
+            <!-- Section 1: Basic Info -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#secBasic">
+                  <i class="bi bi-info-circle me-2"></i>Informasi Dasar
+                </button>
+              </h2>
+              <div id="secBasic" class="accordion-collapse collapse show" data-bs-parent="#formAccordion">
+                <div class="accordion-body">
+                  <div class="row g-2">
+                    <div class="col-md-4">
+                      <label class="form-label small fw-semibold">ID Intent</label>
+                      <input type="text" id="intentId" class="form-control" placeholder="contoh: bp_top_izin">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label small fw-semibold">Deskripsi</label>
+                      <input type="text" id="intentDesc" class="form-control" placeholder="contoh: 5 jenis izin terbanyak">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label small fw-semibold">Label LLM <span class="text-muted">(opsional, untuk header jawaban natural)</span></label>
+                      <input type="text" id="intentLlmLabel" class="form-control" placeholder="contoh: Top 5 jenis izin paling banyak diajukan">
+                    </div>
+                  </div>
+                  <div class="form-check mt-2">
+                    <input type="checkbox" id="intentActive" class="form-check-input" checked>
+                    <label class="form-check-label small" for="intentActive">Aktif</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2: Keywords -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#secKeywords">
+                  <i class="bi bi-keyboard me-2"></i>Kata Kunci
+                </button>
+              </h2>
+              <div id="secKeywords" class="accordion-collapse collapse" data-bs-parent="#formAccordion">
+                <div class="accordion-body">
+                  <div class="mb-2">
+                    <label class="form-label small fw-semibold">Pola Regex <small class="text-muted">(satu per baris, pakai regex. Contoh: <code>top.*jenis|jenis.*terbanyak</code>)</small></label>
+                    <textarea id="intentKeywords" class="form-control font-monospace small" rows="4" placeholder="top.*jenis&#10;jenis.*terbanyak&#10;peringkat.*izin"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 3: SQL & Examples -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#secSql">
+                  <i class="bi bi-code-slash me-2"></i>SQL &amp; Contoh
+                </button>
+              </h2>
+              <div id="secSql" class="accordion-collapse collapse" data-bs-parent="#formAccordion">
+                <div class="accordion-body">
+                  <div class="mb-2">
+                    <label class="form-label small fw-semibold">SQL Template</label>
+                    <textarea id="intentSql" class="form-control font-monospace small" rows="4" placeholder="SELECT ... FROM US_DWH.BI_T_ALL WHERE ..."></textarea>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label small fw-semibold">Parameter <small class="text-muted">(format: <code>nama_param:deskripsi</code>, satu per baris)</small></label>
+                    <textarea id="intentParams" class="form-control small" rows="3" placeholder="pilih_izin:Filter jenis izin (contoh: JENIS_IZIN = 'PB')&#10;filter_tahun:Filter tahun (contoh: TAHUN = '2025')"></textarea>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label small fw-semibold">Contoh Pertanyaan <small class="text-muted">(satu per baris)</small></label>
+                    <textarea id="intentExamples" class="form-control small" rows="2" placeholder="Top 5 jenis izin&#10;Jenis izin terbanyak"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 4: Insight Template -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#secInsight">
+                  <i class="bi bi-chat-quote me-2"></i>Template Insight (gaya jawaban LLM)
+                </button>
+              </h2>
+              <div id="secInsight" class="accordion-collapse collapse" data-bs-parent="#formAccordion">
+                <div class="accordion-body">
+                  <div class="mb-2">
+                    <label class="form-label small fw-semibold">Judul Insight</label>
+                    <input type="text" id="intentInsightJudul" class="form-control" placeholder="contoh: Top 5 Jenis Izin Paling Banyak Diajukan">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label small fw-semibold">Teks Insight <small class="text-muted">(gaya analis senior ngobrol, boleh pakai [TANDA_KURUNG] sebagai placeholder)</small></label>
+                    <textarea id="intentInsightText" class="form-control small" rows="3" placeholder="Dari [TOTAL] total permohonan, [JENIS_TERATAS] mendominasi dengan [NILAI_TERATAS] pengajuan..."></textarea>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label small fw-semibold">Rekomendasi <small class="text-muted">(saran tindak lanjut berbasis data)</small></label>
+                    <textarea id="intentInsightRekom" class="form-control small" rows="3" placeholder="Fokuskan pengembangan layanan pada jenis izin dengan volume tertinggi..."></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 5: Output Format -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#secFormat">
+                  <i class="bi bi-layout-three-columns me-2"></i>Format Jawaban (Deterministik)
+                </button>
+              </h2>
+              <div id="secFormat" class="accordion-collapse collapse" data-bs-parent="#formAccordion">
+                <div class="accordion-body">
+                  <div class="row g-2">
+                    <div class="col-md-4">
+                      <label class="form-label small fw-semibold">Tipe</label>
+                      <select id="intentFormatType" class="form-select" onchange="toggleFormatFields()">
+                        <option value="custom">Custom (kode Python khusus)</option>
+                        <option value="single_value">Nilai Tunggal</option>
+                        <option value="table">Tabel</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label small fw-semibold">Judul Tampilan</label>
+                      <input type="text" id="intentFormatTitle" class="form-control" placeholder="contoh: Top 5 Jenis Izin">
+                    </div>
+                  </div>
+                  <div class="row g-2 mt-2" id="formatColsRow">
+                    <div class="col-md-6">
+                      <label class="form-label small fw-semibold">Kolom <small class="text-muted">(untuk Tabel, satu per baris. Contoh: <code>JENIS_IZIN</code>)</small></label>
+                      <textarea id="intentFormatColumns" class="form-control font-monospace small" rows="3" placeholder="JENIS_IZIN&#10;JUMLAH"></textarea>
+                    </div>
+                    <div class="col-md-6" id="formatValueColWrap">
+                      <label class="form-label small fw-semibold">Nama Kolom Nilai <small class="text-muted">(untuk Nilai Tunggal)</small></label>
+                      <input type="text" id="intentFormatValueCol" class="form-control" placeholder="contoh: JUMLAH">
+                    </div>
+                  </div>
+                  <div class="mt-2 text-muted small">
+                    <i class="bi bi-info-circle"></i> Pilih <strong>Custom</strong> jika intent ini punya format khusus di kode Python (seperti KPI Card, Flow/Sankey). Untuk intent baru, gunakan <strong>Tabel</strong> atau <strong>Nilai Tunggal</strong>.
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
         <div class="modal-footer">
@@ -137,6 +256,8 @@
     const PAGE_SIZE = 10;
 
     document.addEventListener('DOMContentLoaded', loadIntents);
+
+    // ── Load & Render ──
 
     async function loadIntents() {
       document.getElementById('loadingSpinner').classList.remove('d-none');
@@ -219,18 +340,40 @@
       renderIntents();
     }
 
+    // ── Format type toggle ──
+
+    function toggleFormatFields() {
+      const t = document.getElementById('intentFormatType').value;
+      document.getElementById('formatColsRow').style.display = (t === 'table') ? '' : 'none';
+      document.getElementById('formatValueColWrap').style.display = (t === 'single_value') ? '' : 'none';
+    }
+
+    // ── Show Add Modal ──
+
     function showAddModal() {
       document.getElementById('modalTitle').textContent = 'Intent Baru';
       document.getElementById('editId').value = '';
       document.getElementById('intentId').value = '';
       document.getElementById('intentId').readOnly = false;
       document.getElementById('intentDesc').value = '';
+      document.getElementById('intentLlmLabel').value = '';
+      document.getElementById('intentActive').checked = true;
+      document.getElementById('intentKeywords').value = '';
       document.getElementById('intentSql').value = '';
       document.getElementById('intentParams').value = '';
       document.getElementById('intentExamples').value = '';
-      document.getElementById('intentActive').checked = true;
+      document.getElementById('intentInsightJudul').value = '';
+      document.getElementById('intentInsightText').value = '';
+      document.getElementById('intentInsightRekom').value = '';
+      document.getElementById('intentFormatType').value = 'table';
+      document.getElementById('intentFormatTitle').value = '';
+      document.getElementById('intentFormatColumns').value = '';
+      document.getElementById('intentFormatValueCol').value = '';
+      toggleFormatFields();
       new bootstrap.Modal(document.getElementById('intentModal')).show();
     }
+
+    // ── Show Edit Modal ──
 
     async function showEditModal(id) {
       document.getElementById('modalTitle').textContent = 'Edit Intent';
@@ -240,44 +383,120 @@
       try {
         const res = await fetch('/api/intents/' + id);
         const item = await res.json();
+
         document.getElementById('intentDesc').value = item.description || '';
+        document.getElementById('intentLlmLabel').value = item.llm_label || '';
+        document.getElementById('intentActive').checked = item.active !== false;
+
+        // keywords
+        document.getElementById('intentKeywords').value = (item.keyword_patterns || []).join('\n');
+
+        // sql + params + examples
         document.getElementById('intentSql').value = item.sql_template || '';
         const paramsObj = item.params || {};
         document.getElementById('intentParams').value = Object.entries(paramsObj).map(([k, v]) => k + ':' + v).join('\n');
         document.getElementById('intentExamples').value = (item.examples || []).join('\n');
-        document.getElementById('intentActive').checked = item.active !== false;
+
+        // insight template
+        const ins = item.insight_template || {};
+        document.getElementById('intentInsightJudul').value = ins.judul || '';
+        document.getElementById('intentInsightText').value = ins.insight || '';
+        document.getElementById('intentInsightRekom').value = ins.rekomendasi || '';
+
+        // format config
+        const fc = item.format_config || {};
+        document.getElementById('intentFormatType').value = fc.type || 'table';
+        document.getElementById('intentFormatTitle').value = fc.title || '';
+        document.getElementById('intentFormatColumns').value = (fc.columns || []).join('\n');
+        document.getElementById('intentFormatValueCol').value = fc.value_column || '';
+        toggleFormatFields();
+
         new bootstrap.Modal(document.getElementById('intentModal')).show();
       } catch (e) {
         alert('Gagal memuat intent: ' + e.message);
       }
     }
 
+    // ── Save ──
+
     async function saveIntent() {
       const editId = document.getElementById('editId').value;
       const id = document.getElementById('intentId').value.trim();
       const desc = document.getElementById('intentDesc').value.trim();
       const sql = document.getElementById('intentSql').value.trim();
-      const paramsRaw = document.getElementById('intentParams').value.trim();
-      const examplesRaw = document.getElementById('intentExamples').value.trim();
-      const active = document.getElementById('intentActive').checked;
 
       if (!id || !desc || !sql) {
         alert('ID, Deskripsi, dan SQL Template harus diisi.');
         return;
       }
 
-      const params = {};
+      const body = {
+        id,
+        description: desc,
+        sql_template: sql,
+        active: document.getElementById('intentActive').checked,
+        llm_label: document.getElementById('intentLlmLabel').value.trim(),
+
+        // keyword patterns (one per line)
+        keyword_patterns: document.getElementById('intentKeywords').value.trim()
+          ? document.getElementById('intentKeywords').value.split('\n').map(s => s.trim()).filter(Boolean)
+          : [],
+
+        // params
+        params: {},
+        // examples
+        examples: [],
+        // insight template
+        insight_template: {},
+
+        // format config
+        format_config: {},
+      };
+
+      // params
+      const paramsRaw = document.getElementById('intentParams').value.trim();
       if (paramsRaw) {
         paramsRaw.split('\n').forEach(line => {
           const idx = line.indexOf(':');
           if (idx > 0) {
-            params[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+            body.params[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
           }
         });
       }
-      const examples = examplesRaw ? examplesRaw.split('\n').map(s => s.trim()).filter(Boolean) : [];
 
-      const body = { id, description: desc, sql_template: sql, params, examples, active };
+      // examples
+      const exRaw = document.getElementById('intentExamples').value.trim();
+      body.examples = exRaw ? exRaw.split('\n').map(s => s.trim()).filter(Boolean) : [];
+
+      // insight template
+      const insJudul = document.getElementById('intentInsightJudul').value.trim();
+      const insText = document.getElementById('intentInsightText').value.trim();
+      const insRekom = document.getElementById('intentInsightRekom').value.trim();
+      if (insJudul || insText || insRekom) {
+        body.insight_template = { judul: insJudul, insight: insText, rekomendasi: insRekom };
+      }
+
+      // format config
+      const fmtType = document.getElementById('intentFormatType').value;
+      const fmtTitle = document.getElementById('intentFormatTitle').value.trim();
+      if (fmtType === 'custom') {
+        body.format_config = { type: 'custom' };
+      } else if (fmtType === 'single_value') {
+        body.format_config = {
+          type: 'single_value',
+          title: fmtTitle || desc,
+          value_column: document.getElementById('intentFormatValueCol').value.trim(),
+        };
+      } else {
+        // table
+        const cols = document.getElementById('intentFormatColumns').value.trim();
+        body.format_config = {
+          type: 'table',
+          title: fmtTitle || desc,
+          columns: cols ? cols.split('\n').map(s => s.trim()).filter(Boolean) : [],
+        };
+      }
+
       const url = editId ? '/api/intents/' + editId : '/api/intents';
       const method = editId ? 'PUT' : 'POST';
 
@@ -295,6 +514,8 @@
       }
     }
 
+    // ── Delete ──
+
     function showDeleteModal(id) {
       deleteTarget = id;
       document.getElementById('deleteName').textContent = id;
@@ -305,10 +526,7 @@
       if (!deleteTarget) return;
       try {
         const res = await fetch('/api/intents/' + deleteTarget, { method: 'DELETE' });
-        if (!res.ok) {
-          alert('Gagal menghapus');
-          return;
-        }
+        if (!res.ok) { alert('Gagal menghapus'); return; }
         bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
         deleteTarget = null;
         loadIntents();

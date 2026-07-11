@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from app.intents.loader import get_intent
+
 
 def _val(v: Any) -> str:
     if v is None:
@@ -120,6 +122,46 @@ def _fmt_rapor_staf(payload, result):
     return "**Rapor Staf (Top 5)**:\n" + "\n".join(lines)
 
 
+def _fmt_generic(payload, result) -> str:
+    """Generic formatter — works for any intent using format_config from intents.json."""
+    intent_data = get_intent(payload.get("intent", ""))
+    if not intent_data:
+        return "Data tidak ditemukan."
+
+    fmt_cfg = intent_data.get("format_config", {})
+    fmt_type = fmt_cfg.get("type", "table")
+    title = fmt_cfg.get("title", intent_data.get("description", "Laporan"))
+
+    if not result:
+        return f"**{title}**: Data tidak ditemukan."
+
+    # single_value: tampilkan satu angka
+    if fmt_type == "single_value":
+        col = fmt_cfg.get("value_column", list(result[0].keys())[0])
+        val = result[0].get(col, 0)
+        if isinstance(val, float):
+            val = round(val * 100, 2)
+        return f"**{title}**: {val}"
+
+    # table: tampilkan daftar baris
+    columns = fmt_cfg.get("columns", list(result[0].keys()))
+    lines = [f"**{title}**"]
+    for r in result[:10]:
+        parts = []
+        for col in columns:
+            v = r.get(col, "-")
+            if isinstance(v, float):
+                v = round(v, 2)
+            parts.append(f"{col}: {v}")
+        lines.append("- " + " | ".join(parts))
+    if len(result) > 10:
+        lines.append(f"- ... dan {len(result) - 10} baris lainnya")
+
+    if len(lines) == 1:
+        return "Data tidak ditemukan."
+    return "\n".join(lines)
+
+
 _FORMATTERS = {
     "bp_all_kpi_card": _fmt_kpi_card,
     "bp_flow_permohonan": _fmt_flow_permohonan,
@@ -137,4 +179,5 @@ def format_bp_reply(payload: dict, result: list[dict]) -> str:
     formatter = _FORMATTERS.get(intent)
     if formatter:
         return formatter(payload, result)
-    return "Maaf, data untuk laporan tersebut belum tersedia."
+    # Fallback to generic formatter for user-created intents
+    return _fmt_generic(payload, result)

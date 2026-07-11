@@ -7,6 +7,7 @@ from typing import Optional
 
 from app.llm.client import LLMClient
 from app.core.json_util import serialize_dates
+from app.intents.loader import get_llm_label, get_insight_template, list_active_intents
 
 logger = logging.getLogger("reply_service")
 
@@ -42,6 +43,22 @@ def _extract_columns(result: list[dict]) -> str:
     return "\n".join(parts)
 
 
+def _resolve_label(intent: str) -> str:
+    """Cari label: intents.json -> _INTENT_LABELS -> raw id."""
+    label = get_llm_label(intent)
+    if label:
+        return label
+    return _INTENT_LABELS.get(intent, intent)
+
+
+def _resolve_insight_template(intent: str) -> dict:
+    """Cari insight template: intents.json -> _INSIGHT_TEMPLATES -> {}."""
+    tpl = get_insight_template(intent)
+    if tpl:
+        return tpl
+    return _INSIGHT_TEMPLATES.get(intent, {})
+
+
 async def generate_llm_reply(
     question: str,
     intent: str,
@@ -50,7 +67,7 @@ async def generate_llm_reply(
     llm_provider: str = "llamacpp",
     timeout: int = 120,
 ) -> str:
-    label = _INTENT_LABELS.get(intent, intent)
+    label = _resolve_label(intent)
     total_rows = len(result)
     filters = {k: v for k, v in payload.items() if v and k not in ("intent", "_reply")}
 
@@ -61,7 +78,7 @@ async def generate_llm_reply(
         logger.warning("gagal serialize data — %s", e)
         return ""
 
-    domain = _INSIGHT_TEMPLATES.get(intent, {})
+    domain = _resolve_insight_template(intent)
     template_insight = domain.get("insight", "")
     template_rekomendasi = domain.get("rekomendasi", "")
 

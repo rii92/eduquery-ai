@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from app.core.json_util import serialize_dates
-from app.intents.loader import get_intent
+from app.intents.loader import get_intent, get_intent_rules
 
 _TEMPLATES_FILE = Path(__file__).resolve().parent.parent.parent / "prompts" / "templates.json"
 
@@ -69,7 +69,6 @@ class InsightService:
                 facts["min_value"] = min(vals)
                 facts["max_value"] = max(vals)
 
-        # ranking: if data has numeric + label-like column (not date, not numeric)
         if data and numeric_cols:
             num_col = numeric_cols[0]
             label_candidates = [k for k in data[0] if k != num_col and k != date_col]
@@ -91,7 +90,6 @@ class InsightService:
                         facts["bottom_entity"] = rankings[-1]["entity"]
                         facts["bottom_value"] = rankings[-1]["value"]
 
-        # optional second group-by column (e.g. KELOMPOK_STATUS)
         if data and numeric_cols and label_candidates:
             if len(label_candidates) >= 2:
                 second_label = label_candidates[1]
@@ -105,7 +103,6 @@ class InsightService:
                     grouped[key][sub] = val
                 facts["grouped"] = grouped
 
-        # individual column values from first row (e.g. TOTAL_DOKUMEN, TOTAL_TERBIT)
         if data:
             for k, v in data[0].items():
                 if isinstance(v, (int, float)):
@@ -134,9 +131,12 @@ class InsightService:
                 return k
         return None
 
-    # ── Intent rules lookup ──
+    # ── Intent rules lookup (data-driven via intents.json) ──
 
     def _get_intent_rules(self, intent_id: str) -> dict:
+        rules = get_intent_rules(intent_id)
+        if rules:
+            return rules
         rules = self.templates.get("intent_rules", {})
         return rules.get(intent_id, rules.get("_default", {}))
 
@@ -255,7 +255,7 @@ Gunakan hanya fakta dari INPUT di atas. Jawab dalam Bahasa Indonesia. Jangan tam
                 lines.append(f"- {b}")
         if parsed.get("caveats"):
             for c in parsed["caveats"][:4]:
-                lines.append(f"> ⚠ {c}")
+                lines.append(f"> \u26a0 {c}")
         return "\n".join(lines) if lines else raw
 
     def _extract_json(self, text: str) -> Optional[str]:

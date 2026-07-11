@@ -1,9 +1,9 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 import re
 from app.intents.loader import get_intent
 
 
-def _resolve_template(intent: str) -> str | None:
+def _resolve_template(intent: str) -> Optional[str]:
     item = get_intent(intent)
     if item and item.get("active"):
         return item.get("sql_template")

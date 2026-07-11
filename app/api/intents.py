@@ -21,6 +21,11 @@ class IntentCreate(BaseModel):
     params: Dict[str, str] = {}
     examples: List[str] = []
     active: bool = True
+    keyword_patterns: List[str] = []
+    llm_label: str = ""
+    insight_template: Dict = {}
+    intent_rules: Dict = {}
+    format_config: Dict = {}
 
 
 class IntentUpdate(BaseModel):
@@ -29,6 +34,11 @@ class IntentUpdate(BaseModel):
     params: Optional[Dict[str, str]] = None
     examples: Optional[List[str]] = None
     active: Optional[bool] = None
+    keyword_patterns: Optional[List[str]] = None
+    llm_label: Optional[str] = None
+    insight_template: Optional[Dict] = None
+    intent_rules: Optional[Dict] = None
+    format_config: Optional[Dict] = None
 
 
 @router.get("/api/intents")

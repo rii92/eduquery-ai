@@ -1,7 +1,7 @@
 """Memuat dan mengelola intent dari prompts/intents.json."""
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 INTENTS_FILE = Path(__file__).resolve().parent.parent.parent / "prompts" / "intents.json"
 
@@ -21,7 +21,11 @@ def list_intents() -> List[Dict[str, Any]]:
     return _read()
 
 
-def get_intent(intent_id: str) -> Dict[str, Any] | None:
+def list_active_intents() -> List[Dict[str, Any]]:
+    return [i for i in _read() if i.get("active", True)]
+
+
+def get_intent(intent_id: str) -> Optional[Dict[str, Any]]:
     for item in _read():
         if item["id"] == intent_id:
             return item
@@ -30,11 +34,9 @@ def get_intent(intent_id: str) -> Dict[str, Any] | None:
 
 def create_intent(data: Dict[str, Any]) -> Dict[str, Any]:
     intents = _read()
-    # Generate ID otomatis dari deskripsi jika tidak disediakan
     if "id" not in data or not data["id"]:
         base = data.get("description", "new_intent").lower().replace(" ", "_")[:30]
         data["id"] = base
-    # Pastikan ID unik
     ids = {i["id"] for i in intents}
     original = data["id"]
     counter = 1
@@ -44,17 +46,23 @@ def create_intent(data: Dict[str, Any]) -> Dict[str, Any]:
     data.setdefault("params", {})
     data.setdefault("examples", [])
     data.setdefault("active", True)
+    data.setdefault("source", "custom")
+    data.setdefault("keyword_patterns", [])
+    data.setdefault("llm_label", "")
+    data.setdefault("insight_template", {})
+    data.setdefault("intent_rules", {})
+    data.setdefault("format_config", {"type": "table"})
     intents.append(data)
     _write(intents)
     return data
 
 
-def update_intent(intent_id: str, data: Dict[str, Any]) -> Dict[str, Any] | None:
+def update_intent(intent_id: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     intents = _read()
     for i, item in enumerate(intents):
         if item["id"] == intent_id:
             item.update(data)
-            item["id"] = intent_id  # pertahankan ID asli
+            item["id"] = intent_id
             intents[i] = item
             _write(intents)
             return item
@@ -70,24 +78,52 @@ def delete_intent(intent_id: str) -> bool:
     return True
 
 
+def find_intent_by_keywords(question: str) -> Optional[Dict[str, Any]]:
+    """Cocokkan pertanyaan dengan keyword_patterns dari semua intent aktif."""
+    import re
+    for intent in list_active_intents():
+        patterns = intent.get("keyword_patterns", [])
+        for pat in patterns:
+            if re.search(pat, question):
+                return {"intent": intent["id"]}
+    return None
+
+
+def get_llm_label(intent_id: str) -> str:
+    item = get_intent(intent_id)
+    if item and item.get("llm_label"):
+        return item["llm_label"]
+    return intent_id
+
+
+def get_insight_template(intent_id: str) -> Dict[str, str]:
+    item = get_intent(intent_id)
+    if item and item.get("insight_template"):
+        return item["insight_template"]
+    return {}
+
+
+def get_intent_rules(intent_id: str) -> Dict[str, Any]:
+    item = get_intent(intent_id)
+    if item and item.get("intent_rules"):
+        return item["intent_rules"]
+    return {}
+
+
 def build_prompt_section() -> str:
-    """Bangun blok DAFTAR INTENT untuk prompt LLM."""
-    intents = _read()
+    intents = list_active_intents()
     lines = []
     for item in intents:
-        if item.get("active", True):
-            lines.append(f"- {item['id']}: {item['description']}")
+        lines.append(f"- {item['id']}: {item['description']}")
     return "\n".join(lines)
 
 
 def build_params_section() -> str:
-    """Bangun blok PARAMETER untuk prompt LLM."""
     all_params: Dict[str, str] = {}
-    for item in _read():
-        if item.get("active", True):
-            for param, desc in item.get("params", {}).items():
-                if param not in all_params:
-                    all_params[param] = desc
+    for item in list_active_intents():
+        for param, desc in item.get("params", {}).items():
+            if param not in all_params:
+                all_params[param] = desc
     lines = []
     for name, desc in all_params.items():
         lines.append(f"- {name}: {desc}")
@@ -95,12 +131,9 @@ def build_params_section() -> str:
 
 
 def build_examples_section() -> str:
-    """Bangun blok CONTOH dengan contoh dari setiap intent."""
-    intents = _read()
+    intents = list_active_intents()
     lines = []
     for item in intents:
-        if not item.get("active", True):
-            continue
         examples = item.get("examples", [])
         if not examples:
             continue
