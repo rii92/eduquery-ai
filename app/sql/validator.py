@@ -4,6 +4,7 @@ class SQLValidator:
     ALLOWED_TABLES = [
         "bi_t_all",
         "bi_h_all",
+        "dual",
     ]
     FORBIDDEN = ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER"]
 
