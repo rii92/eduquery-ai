@@ -60,6 +60,94 @@ def classify_by_keyword(question: str) -> Optional[Dict[str, Any]]:
     if re.search(r"rapor.*staf|evaluasi.*staf|kinerja.*verifikator|skor.*staf|nilai.*staf", q):
         return {"intent": "bp_rapor_staf"}
 
+    # ── Perizinan PB/PD Scorecard ──
+    if re.search(r"(pb|pd).*(scorecard|ringkasan|total)|perizinan.*(pb|pd)|ringkasan.*pb|ringkasan.*pd", q):
+        return {"intent": "bp_perizinan_scorecard"}
+
+    # ── Perizinan PB/PD Gauge ──
+    if re.search(r"(pb|pd).*(gauge|performa)|performa.*(pb|pd)", q):
+        return {"intent": "bp_perizinan_gauge"}
+
+    # ── Perizinan PB/PD Komposisi Status ──
+    if re.search(r"(pb|pd).*(komposisi|sebaran|stacked)|komposisi.*(pb|pd)", q):
+        return {"intent": "bp_perizinan_komposisi"}
+
+    # ── Perizinan PB/PD Sankey ──
+    if re.search(r"(pb|pd).*(sankey|flow|alur)|alur.*(pb|pd)", q):
+        return {"intent": "bp_perizinan_sankey"}
+
+    # ── Perizinan PB/PD Tren ──
+    if re.search(r"(pb|pd).*(tren|inflow|outflow)|tren.*(pb|pd)", q):
+        return {"intent": "bp_perizinan_tren"}
+
+    # ── Perizinan PB/PD Funnel ──
+    if re.search(r"(pb|pd).*(funnel|kemacetan|bottleneck|tahapan)|funnel.*(pb|pd)", q):
+        return {"intent": "bp_perizinan_funnel"}
+
+    # ── Perizinan PB/PD SLA ──
+    if re.search(r"(pb|pd).*(sla|kepatuhan)|sla.*(pb|pd)", q):
+        return {"intent": "bp_perizinan_sla"}
+
+    # ── Perizinan PB/PD Leaderboard Verifikator ──
+    if re.search(r"(pb|pd).*(leaderboard|verifikator|beban.*staf)|verifikator.*(pb|pd)", q):
+        return {"intent": "bp_perizinan_leaderboard_verifikator"}
+
+    # ── Perizinan PB/PD Countdown SLA ──
+    if re.search(r"(pb|pd).*(countdown|deadline|mendekati.*sla)", q):
+        return {"intent": "bp_perizinan_countdown"}
+
+    # ── Perizinan PB/PD Jam Kerja ──
+    if re.search(r"(pb|pd).*(jam.*kerja|waktu.*kerja)|jam.*kerja.*(pb|pd)", q):
+        return {"intent": "bp_perizinan_jam_kerja"}
+
+    # ── Perizinan PB/PD Rapor Staf ──
+    if re.search(r"(pb|pd).*(rapor|evaluasi.*staf|kinerja.*staf)", q):
+        return {"intent": "bp_perizinan_rapor"}
+
+    # ── Perizinan PB/PD Detail ──
+    if re.search(r"(pb|pd).*(detail|tabel.*permohonan|rincian)", q):
+        return {"intent": "bp_perizinan_detail"}
+
+    # ── Izin Keluar Masuk Barang ──
+    if re.search(r"keluar.*masuk.*barang|ikel|komoditas.*barang|barang.*komoditas", q):
+        return {"intent": "bp_ikel_komoditas"}
+    if re.search(r"perusahaan.*(ikel|keluar.*masuk|barang)", q):
+        return {"intent": "bp_ikel_perusahaan"}
+    if re.search(r"detail.*(ikel|keluar.*masuk)|tabel.*(ikel|barang)", q):
+        return {"intent": "bp_ikel_detail"}
+
+    # ── Reklame ──
+    if re.search(r"reklame.*(masuk|total|rekap)", q):
+        return {"intent": "bp_reklame_masuk"}
+    if re.search(r"reklame.*(status|komposisi)", q):
+        return {"intent": "bp_reklame_status"}
+    if re.search(r"reklame.*(kadaluarsa|kadaluwarsa|lewat.*masa|expired)", q):
+        return {"intent": "bp_reklame_kadaluarsa"}
+    if re.search(r"reklame.*(tanpa.*tanggal|tanggal.*kosong|null)", q):
+        return {"intent": "bp_reklame_tanggal_kosong"}
+    if re.search(r"reklame.*(rasio|masa.*berlaku|lama.*berlaku)", q):
+        return {"intent": "bp_reklame_rasio"}
+    if re.search(r"reklame.*(tagihan|perpanjangan|bayar|retribusi)", q):
+        return {"intent": "bp_reklame_tagihan"}
+    if re.search(r"reklame.*(detail|tabel|rincian|data)", q):
+        return {"intent": "bp_reklame_detail"}
+
+    # ── Pengaduan ──
+    if re.search(r"pengaduan.*(masuk|total|rekap)", q):
+        return {"intent": "bp_pengaduan_masuk"}
+    if re.search(r"pengaduan.*(status|komposisi|sebaran)", q):
+        return {"intent": "bp_pengaduan_status"}
+    if re.search(r"pengaduan.*(detail|tabel|rincian|data)", q):
+        return {"intent": "bp_pengaduan_detail"}
+
+    # ── Tracking ──
+    if re.search(r"tracking|lacak|cek.*permohonan|status.*permohonan", q):
+        return {"intent": "bp_tracking"}
+
+    # ── Profil Usaha ──
+    if re.search(r"profil.*(usaha|perusahaan)|riwayat.*perizinan|data.*perusahaan", q):
+        return {"intent": "bp_profil_usaha"}
+
     # ── Fallback: BP Batam → KPI Card ──
     has_bp = re.search(r"\bbp\b|bp[\s_]?batam|data.?warehouse", q)
     has_izin = re.search(r"izin|perizinan|permohonan", q)

@@ -38,5 +38,140 @@
     "judul": "Rapor Evaluasi Kinerja Staf",
     "insight": "Leaderboard 5 kinerja teratas menunjukkan kisaran skor akhir antara [SKOR_MIN] hingga [SKOR_MAX], dengan rata-rata [SKOR_RATA]. Selisih yang cukup lebar antara staf terbaik dan terendah mengindikasikan adanya variasi kompetensi atau beban kerja yang belum merata. Staf dengan skor tinggi umumnya unggul di aspek [ASPEK_UNGGULAN] dan menjadi tolok ukur bagi staf lainnya.",
     "rekomendasi": "Gunakan data ini untuk menyusun program best practice sharing, di mana staf dengan skor tertinggi dapat menjadi mentor bagi rekan-rekan yang membutuhkan peningkatan di aspek tertentu. Berikan pelatihan terarah kepada staf dengan skor rendah, terutama pada indikator yang paling berkontribusi terhadap skor akhir, dan lakukan monitoring berkala untuk mengukur efektivitas intervensi yang telah dilakukan."
+  },
+  "bp_perizinan_scorecard": {
+    "judul": "Scorecard Permohonan Izin PB/PD",
+    "insight": "Distribusi [TOTAL_MASUK] permohonan izin PB dan PD menunjukkan gambaran operasional yang komprehensif: [TOTAL_TERBIT] permohonan berhasil diterbitkan, sementara [DLM_PROSES] masih dalam tahap pemrosesan dan [TOTAL_TOLAK] dinyatakan ditolak. Terdapat [TOTAL_OVERDUE] permohonan yang melampaui batas SLA, menjadi indikator awal adanya hambatan pada alur verifikasi yang memerlukan perhatian khusus untuk menjaga mutu layanan.",
+    "rekomendasi": "Jadikan scorecard ini sebagai acuan harian untuk memonitor kesehatan pipeline perizinan PB dan PD. Segera lakukan investigasi terhadap [TOTAL_OVERDUE] permohonan yang melampaui SLA untuk diidentifikasi akar masalahnya—apakah terkait kompleksitas dokumen, ketidaklengkapan persyaratan dari pemohon, atau keterbatasan kapasitas verifikator. Optimalisasi alokasi sumber daya berdasarkan data ini akan meningkatkan efisiensi dan kepuasan pengguna layanan."
+  },
+  "bp_perizinan_gauge": {
+    "judul": "Gauge Performa Penyelesaian PB/PD",
+    "insight": "Capaian [PERFORMA_PENYELESAIAN] pada Gauge Chart untuk PB dan PD ini mencerminkan tingkat penyelesaian permohonan yang telah diproses. Angka ini memberikan gambaran awal tentang efektivitas penanganan permohonan di sektor perizinan PB dan PD secara spesifik, sehingga dapat diketahui sektor mana yang perlu mendapatkan perhatian lebih.",
+    "rekomendasi": "Gunakan data ini untuk mengevaluasi efektivitas penanganan permohonan PB dan PD. Apabila performa menunjukkan tren penurunan, segera identifikasi faktor penyebab dan lakukan langkah perbaikan seperti penyesuaian SOP, penambahan staf, atau optimalisasi sistem untuk meningkatkan capaian penyelesaian."
+  },
+  "bp_perizinan_komposisi": {
+    "judul": "Komposisi Status Permohonan PB/PD",
+    "insight": "Komposisi status dari [TOTAL] permohonan PB dan PD menunjukkan sebaran yang variatif: [TERBIT] dokumen telah selesai, [TOLAK] ditolak, [PROSES] masih dalam proses, dan [OVERDUE] melampaui batas waktu. Proporsi [PERSEN_TERBIT]% terbit mengindikasikan tingkat penyelesaian yang cukup baik, namun keberadaan [PERSEN_OVERDUE]% overdue memerlukan perhatian khusus untuk mencegah akumulasi hambatan.",
+    "rekomendasi": "Analisis lebih lanjut diperlukan untuk memahami faktor yang menyebabkan [TOTAL_OVERDUE] permohonan melampaui SLA. Fokus pada jenis izin dengan proporsi overdue tertinggi dan lakukan evaluasi alur verifikasi untuk menemukan bottleneck. Pertimbangkan penerapan prioritas penyelesaian berdasarkan usia dokumen untuk mengurangi jumlah overdue secara bertahap."
+  },
+  "bp_perizinan_sankey": {
+    "judul": "Diagram Sankey Permohonan PB/PD",
+    "insight": "Diagram Sankey menunjukkan aliran [TOTAL] permohonan PB dan PD dari satu tahap ke tahap berikutnya. Terlihat distribusi yang menyebar ke berbagai status tujuan, menggambarkan pipeline aktif yang perlu dimonitor secara ketat. Aliran dengan volume besar menandakan tahapan yang menjadi fokus utama dalam proses perizinan.",
+    "rekomendasi": "Lakukan analisis detail pada aliran yang memiliki volume terbesar untuk memastikan kapasitas pemrosesan memadai. Data ini dapat digunakan untuk simulasi skenario sebelum dan sesudah penerapan kebijakan baru, sehingga pimpinan dapat mengambil keputusan berbasis data untuk optimalisasi SOP."
+  },
+  "bp_perizinan_tren": {
+    "judul": "Tren Inflow vs Outflow PB/PD",
+    "insight": "Selama periode [TGL_AWAL] – [TGL_AKHIR], terdapat [TOTAL_INFLOW] permohonan PB/PD masuk dan [TOTAL_OUTFLOW] permohonan selesai. Rata-rata inflow [RATA_INFLOW] per hari dan outflow [RATA_OUTFLOW] per hari, dengan selisih [GAP] dokumen yang belum terselesaikan. Akumulasi gap ini perlu diwaspadai karena berpotensi meningkatkan backlog dan waktu tunggu penyelesaian.",
+    "rekomendasi": "Evaluasi kapasitas verifikasi harian dan selaraskan dengan rata-rata inflow untuk mencegah penumpukan. Gunakan data tren ini sebagai bahan evaluasi periodik untuk mengukur efektivitas pelayanan perizinan PB dan PD, serta sebagai dasar pengambilan keputusan strategis."
+  },
+  "bp_perizinan_funnel": {
+    "judul": "Funnel Tahapan Proses PB/PD",
+    "insight": "Funnel ini memetakan transisi [TOTAL] dokumen PB dan PD yang mengalir dari satu tahapan ke tahapan berikutnya. Tahap dengan penurunan jumlah paling drastis menandakan bottleneck utama yang perlu segera diidentifikasi—apakah karena verifikasi teknis yang ketat, kelengkapan dokumen pemohon, atau keterbatasan SDM pada tahap tersebut.",
+    "rekomendasi": "Prioritaskan intervensi pada bottleneck utama, misalnya dengan menambah tenaga verifikator atau menyederhanakan alur pada tahap yang paling lambat. Pertimbangkan digitalisasi dan auto-routing untuk dokumen yang memerlukan verifikasi berulang guna memangkas waktu siklus penyelesaian."
+  },
+  "bp_perizinan_sla": {
+    "judul": "SLA Per Jenis Izin per Bulan (PB/PD)",
+    "insight": "Kepatuhan SLA per jenis izin per bulan menunjukkan variasi tingkat ketepatan waktu penyelesaian. Beberapa jenis izin menunjukkan kepatuhan tinggi [PERSEN_SLA_TINGGI]%, sementara yang lain masih perlu perbaikan. Tren kepatuhan SLA dari bulan ke bulan memberikan gambaran konsistensi kualitas layanan perizinan PB dan PD.",
+    "rekomendasi": "Identifikasi jenis izin dengan kepatuhan SLA terendah dan lakukan analisis penyebab utama keterlambatan. Terapkan rencana perbaikan berkelanjutan pada jenis izin tersebut, baik dari sisi SOP maupun kapasitas SDM. Pantau tren bulanan untuk memastikan perbaikan yang dilakukan memberikan hasil yang positif."
+  },
+  "bp_perizinan_leaderboard_verifikator": {
+    "judul": "Leaderboard Verifikator PB/PD",
+    "insight": "Leaderboard verifikator menunjukkan [JUMLAH_STAF] staf yang menangani permohonan PB dan PD dengan total [TOTAL_DOKUMEN] dokumen. Terdapat variasi beban kerja antar staf, dengan staf paling produktif menangani [MAX_BEBAN] dokumen dan yang terendah [MIN_BEBAN] dokumen. Ketimpangan beban kerja ini perlu dievaluasi untuk memastikan distribusi tugas yang merata.",
+    "rekomendasi": "Gunakan data ini untuk meratakan distribusi tugas antar verifikator. Identifikasi staf dengan beban kerja tertinggi dan berikan dukungan tambahan jika diperlukan. Lakukan evaluasi periodik untuk memastikan keseimbangan beban kerja dan mencegah kelelahan staf yang dapat menurunkan kualitas verifikasi."
+  },
+  "bp_perizinan_countdown": {
+    "judul": "Countdown SLA Permohonan PB/PD",
+    "insight": "Terdapat [JUMLAH] permohonan PB dan PD yang mendekati batas waktu SLA dengan sisa waktu [SISA_WAKTU] hari. Permohonan-permohonan ini memerlukan prioritas penanganan untuk mencegah masuk ke kategori overdue. Mayoritas berada pada tahap [TAHAP_TERBANYAK] dan membutuhkan percepatan proses.",
+    "rekomendasi": "Segera alokasikan sumber daya tambahan untuk menyelesaikan permohonan yang mendekati batas SLA. Buat sistem pengingat otomatis yang memberi notifikasi kepada verifikator ketika permohonan memasuki periode kritis SLA. Prioritaskan penyelesaian berdasarkan urgensi untuk meminimalkan jumlah permohonan yang melampaui batas waktu."
+  },
+  "bp_perizinan_jam_kerja": {
+    "judul": "Total Dalam/Luar Jam Kerja (PB/PD)",
+    "insight": "Proporsi [PERSEN_DALAM]% pekerjaan verifikasi PB dan PD dilakukan dalam jam kerja ([JUMLAH_DALAM] dokumen), sementara [PERSEN_LUAR]% dilakukan di luar jam kerja ([JUMLAH_LUAR] dokumen). Tingginya aktivitas di luar jam kerja dapat menjadi indikasi ketidakseimbangan antara volume pekerjaan dengan kapasitas SDM yang tersedia.",
+    "rekomendasi": "Evaluasi ulang distribusi beban kerja verifikator dan pertimbangkan penyesuaian kapasitas SDM jika proporsi kerja di luar jam kerja terus meningkat. Berikan apresiasi bagi staf yang menunjukkan dedikasi, namun pastikan hal ini tidak menjadi pola permanen yang berisiko menurunkan produktivitas jangka panjang."
+  },
+  "bp_perizinan_rapor": {
+    "judul": "Rapor Evaluasi Staf (PB/PD)",
+    "insight": "Rapor evaluasi staf untuk penanganan PB dan PD menunjukkan rentang skor antara [SKOR_MIN] hingga [SKOR_MAX] dengan rata-rata [SKOR_RATA]. Staf dengan skor tertinggi unggul di aspek [ASPEK_UNGGULAN], sementara staf dengan skor rendah perlu mendapatkan perhatian khusus untuk peningkatan kompetensi.",
+    "rekomendasi": "Gunakan data ini untuk menyusun program pengembangan kapasitas staf secara terarah. Terapkan sistem mentor di mana staf berkinerja tinggi membimbing rekan yang membutuhkan peningkatan. Lakukan monitoring berkala untuk mengukur efektivitas intervensi yang telah dilakukan."
+  },
+  "bp_perizinan_detail": {
+    "judul": "Detail Table Permohonan Izin (PB/PD)",
+    "insight": "Detail [JUMLAH] permohonan izin PB dan PD tercatat dalam tabel dengan berbagai informasi penting seperti nomor permohonan, jenis izin, pemohon, status terkini, dan tanggal-tanggal kritis. Data ini merupakan sumber informasi granular yang dapat digunakan untuk pelacakan dan verifikasi individual.",
+    "rekomendasi": "Gunakan tabel detail ini untuk melakukan penelusuran mendalam terhadap permohonan tertentu, terutama yang memerlukan tindak lanjut atau memiliki status yang memprihatinkan. Filter dan sortir data berdasarkan prioritas untuk memudahkan pengambilan tindakan yang tepat dan cepat."
+  },
+  "bp_ikel_komoditas": {
+    "judul": "Izin Keluar Masuk Barang — Per Jenis Komoditas",
+    "insight": "Distribusi [TOTAL] izin keluar masuk barang berdasarkan jenis komoditas menunjukkan komoditas [KOMODITAS_TERBANYAK] mendominasi dengan [NILAI_TERBANYAK] izin, diikuti oleh komoditas lainnya. Komposisi ini mencerminkan pola aktivitas perdagangan dan logistik yang terjadi di kawasan BP Batam.",
+    "rekomendasi": "Gunakan data komposisi komoditas ini untuk mengidentifikasi sektor-sektor unggulan dan tren perdagangan di BP Batam. Informasi ini dapat menjadi bahan pertimbangan dalam pengambilan kebijakan terkait pengembangan kawasan dan fasilitas pendukung logistik."
+  },
+  "bp_ikel_perusahaan": {
+    "judul": "Izin Keluar Masuk Barang — Per Perusahaan",
+    "insight": "Terdapat [JUMLAH_PERUSAHAAN] perusahaan yang mengajukan izin keluar masuk barang, dengan [PERUSAHAAN_TERAKTIF] sebagai perusahaan paling aktif dengan [JUMLAH_IZIN] izin. Konsentrasi aktivitas pada beberapa perusahaan utama menunjukkan pola bisnis yang perlu dipahami untuk pelayanan yang lebih baik.",
+    "rekomendasi": "Identifikasi kebutuhan spesifik dari perusahaan-perusahaan dengan volume izin tinggi dan pertimbangkan untuk memberikan layanan khusus atau dedicated support. Data ini juga berguna untuk program retensi dan pengembangan investasi di kawasan BP Batam."
+  },
+  "bp_ikel_detail": {
+    "judul": "Detail Izin Keluar Masuk Barang",
+    "insight": "Terdapat [JUMLAH] transaksi izin keluar masuk barang yang tercatat dengan rincian lengkap meliputi nomor izin, perusahaan, komoditas, volume, dan periode berlaku. Data ini memberikan visibilitas penuh terhadap aktivitas logistik yang terjadi.",
+    "rekomendasi": "Manfaatkan data detail ini untuk melakukan monitoring dan evaluasi kepatuhan terhadap ketentuan izin keluar masuk barang. Lakukan rekonsiliasi periodik antara data perizinan dengan data lapangan untuk memastikan akurasi dan kepatuhan."
+  },
+  "bp_reklame_masuk": {
+    "judul": "Total Masuk Reklame",
+    "insight": "Total [TOTAL_MASUK] permohonan reklame tercatat dengan komposisi [TOTAL_TERBIT] diterbitkan dan [TOTAL_DALAM_PROSES] masih dalam proses. Angka ini memberikan gambaran volume aktivitas perizinan reklame yang menjadi salah satu sumber pendapatan daerah melalui retribusi.",
+    "rekomendasi": "Pantau tren permohonan reklame secara berkala untuk mengantisipasi lonjakan volume pada periode tertentu. Pastikan kapasitas verifikasi dan pemeriksaan lapangan memadai untuk menjaga kualitas pelayanan perizinan reklame."
+  },
+  "bp_reklame_status": {
+    "judul": "Komposisi Status Reklame",
+    "insight": "Komposisi status permohonan reklame menunjukkan [PERSEN_TERBIT]% telah terbit, [PERSEN_PROSES]% masih dalam proses, dan [PERSEN_TOLAK]% ditolak. Terdapat [JUMLAH_OVERDUE] permohonan yang telah melampaui masa berlaku, memerlukan tindak lanjut berupa perpanjangan atau penertiban.",
+    "rekomendasi": "Lakukan evaluasi terhadap permohonan yang masih dalam proses untuk memastikan tidak terjadi penundaan yang tidak perlu. Untuk reklame yang telah kadaluarsa, segera lakukan koordinasi dengan bidang terkait untuk proses penertiban atau perpanjangan."
+  },
+  "bp_reklame_kadaluarsa": {
+    "judul": "Kadaluarsa Reklame",
+    "insight": "Terdapat [JUMLAH_KADALUARSA] reklame yang telah melewati masa berlaku, dengan total [TOTAL_NILAI] nilai retribusi yang belum tertagih. Reklame-reklame ini tersebar di [SEBARAN_LOKASI] lokasi dan memerlukan tindak lanjut segera untuk penertiban atau perpanjangan izin.",
+    "rekomendasi": "Prioritaskan penanganan reklame kadaluarsa dengan pendekatan bertahap: mulai dari pengiriman surat peringatan, pendataan ulang kondisi lapangan, hingga tindakan penertiban jika diperlukan. Optimalkan potensi pendapatan dari perpanjangan izin reklame yang masih prospektif."
+  },
+  "bp_reklame_tanggal_kosong": {
+    "judul": "Reklame Tanpa Tanggal/Tanggal Kosong",
+    "insight": "Terdapat [JUMLAH] data reklame yang memiliki nilai tanggal kosong atau tidak valid pada kolom [KOLOM_BERMASALAH]. Data yang tidak lengkap ini berpotensi mengganggu akurasi perhitungan masa berlaku, retribusi, dan pelacakan kepatuhan izin reklame.",
+    "rekomendasi": "Segera lakukan validasi dan pembersihan data (data cleansing) terhadap reklame yang memiliki tanggal kosong. Koordinasikan dengan tim terkait untuk melengkapi data historis dan terapkan validasi input untuk mencegah kejadian serupa di masa mendatang."
+  },
+  "bp_reklame_rasio": {
+    "judul": "Rasio Masa Berlaku Reklame",
+    "insight": "Analisis rasio masa berlaku reklame menunjukkan distribusi [JUMLAH] reklame dengan rata-rata masa berlaku [RATA_MASA_BERLAKU] hari. Sebaran masa berlaku ini bervariasi, dipengaruhi oleh jenis reklame, lokasi, dan ketentuan yang berlaku untuk masing-masing izin.",
+    "rekomendasi": "Gunakan data rasio masa berlaku untuk mengevaluasi kebijakan penetapan jangka waktu izin reklame. Pertimbangkan penyesuaian masa berlaku berdasarkan jenis dan lokasi reklame untuk mengoptimalkan pengawasan dan pendapatan retribusi."
+  },
+  "bp_reklame_tagihan": {
+    "judul": "Daftar Tagihan Perpanjangan Reklame",
+    "insight": "Terdapat [JUMLAH_TAGIHAN] tagihan perpanjangan reklame dengan total nilai [TOTAL_NILAI] yang perlu ditindaklanjuti. Tagihan ini mencakup reklame yang akan segera dan sudah melewati masa berlaku, dengan potensi pendapatan yang signifikan bagi daerah.",
+    "rekomendasi": "Lakukan penagihan secara sistematis dengan prioritas pada tagihan bernilai besar dan yang paling mendekati jatuh tempo. Gunakan data ini sebagai dasar untuk mengoptimalkan penerimaan retribusi reklame dan mencegah kehilangan potensi pendapatan daerah."
+  },
+  "bp_reklame_detail": {
+    "judul": "Detail Reklame",
+    "insight": "Detail [JUMLAH] data reklame tercatat dengan informasi lengkap meliputi nomor izin, pemohon, lokasi, jenis reklame, masa berlaku, dan nilai retribusi. Data ini memberikan visibilitas penuh terhadap seluruh objek reklame yang terdaftar dan memudahkan pengawasan.",
+    "rekomendasi": "Gunakan tabel detail ini untuk melakukan monitoring individual terhadap setiap objek reklame. Lakukan rekonsiliasi data secara berkala antara database dan kondisi lapangan untuk memastikan keakuratan data dan kepatuhan pemohon."
+  },
+  "bp_pengaduan_masuk": {
+    "judul": "Total Masuk Pengaduan",
+    "insight": "Total [TOTAL_MASUK] pengaduan tercatat dengan komposisi [TOTAL_SELESAI] selesai ditindaklanjuti dan [TOTAL_BELUM] masih dalam proses penanganan. Data ini merepresentasikan tingkat partisipasi masyarakat dalam menyampaikan aspirasi dan keluhan terkait layanan BP Batam.",
+    "rekomendasi": "Pantau tren pengaduan secara berkala untuk mengidentifikasi pola dan akar masalah yang sering dikeluhkan masyarakat. Pastikan setiap pengaduan mendapatkan respons dan tindak lanjut yang tepat waktu untuk menjaga kepercayaan publik terhadap BP Batam."
+  },
+  "bp_pengaduan_status": {
+    "judul": "Komposisi Status Pengaduan",
+    "insight": "Komposisi status pengaduan menunjukkan [PERSEN_SELESAI]% telah selesai ditangani, [PERSEN_PROSES]% dalam proses, dan [PERSEN_BELUM]% belum ditindaklanjuti. Rata-rata waktu penyelesaian pengaduan adalah [RATA_WAKTU] hari, yang menjadi indikator kualitas respons layanan pengaduan.",
+    "rekomendasi": "Evaluasi efektivitas penanganan pengaduan dengan fokus pada pengaduan yang masih dalam proses dan belum ditindaklanjuti. Terapkan target waktu penyelesaian yang jelas dan sistem monitoring untuk memastikan setiap pengaduan mendapat penanganan yang memadai."
+  },
+  "bp_pengaduan_detail": {
+    "judul": "Detail Pengaduan",
+    "insight": "Detail [JUMLAH] pengaduan tercatat dengan informasi lengkap meliputi nomor pengaduan, pelapor, kategori, deskripsi, status, dan riwayat penanganan. Data ini merupakan sumber informasi penting untuk analisis kualitas layanan dan perbaikan berkelanjutan.",
+    "rekomendasi": "Gunakan data detail pengaduan untuk melakukan analisis akar masalah dan menyusun rekomendasi perbaikan layanan. Identifikasi pola pengaduan yang sering muncul dan lakukan langkah preventif untuk mengurangi jumlah pengaduan serupa di masa mendatang."
+  },
+  "bp_tracking": {
+    "judul": "Tracking Permohonan",
+    "insight": "Tracking permohonan dengan nomor [NO_PERMOHONAN] menunjukkan status terkini [STATUS] pada tahap [TAHAPAN]. Permohonan ini telah melalui [JUMLAH_TAHAP] tahapan proses dengan total waktu [LAMA_PROSES] hari sejak tanggal masuk [TGL_MASUK].",
+    "rekomendasi": "Gunakan fitur tracking untuk memberikan informasi real-time kepada pemohon mengenai status permohonannya. Data tracking juga berguna untuk mengidentifikasi tahapan yang memakan waktu paling lama dan menjadi bahan evaluasi untuk percepatan proses."
+  },
+  "bp_profil_usaha": {
+    "judul": "Profil Usaha Perizinan",
+    "insight": "Profil usaha [NAMA_PERUSAHAAN] menunjukkan riwayat perizinan dengan total [TOTAL_IZIN] permohonan yang pernah diajukan, terdiri dari [JENIS_IZIN] dan status terkini [STATUS_AKTIF]. Perusahaan ini tercatat aktif dalam kegiatan usaha di kawasan BP Batam sejak [TGL_TERDAFTAR].",
+    "rekomendasi": "Gunakan data profil usaha untuk memberikan layanan yang lebih personal dan responsif kepada setiap pelaku usaha. Identifikasi perusahaan dengan riwayat perizinan panjang untuk program retensi investasi, dan perusahaan baru untuk pendampingan proses perizinan."
   }
 }

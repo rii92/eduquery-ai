@@ -135,5 +135,343 @@
     ],
     "active": true,
     "source": "bp"
+  },
+  {
+    "id": "bp_perizinan_scorecard",
+    "description": "BP Batam: Scorecard permohonan izin PB/PD — total, terbit, tolak, proses, overdue",
+    "sql_template": "SELECT \n    COUNT(NO_PERMOHONAN) AS TOTAL_MASUK,\n    COALESCE(SUM(CASE WHEN KATEGORI_STATUS = 'TERBIT' THEN 1 ELSE 0 END), 0) AS TOTAL_TERBIT,\n    COALESCE(SUM(CASE WHEN KATEGORI_STATUS = 'TOLAK' THEN 1 ELSE 0 END), 0) AS TOTAL_TOLAK,\n    COALESCE(SUM(CASE WHEN KATEGORI_STATUS = 'DALAM PROSES' THEN 1 ELSE 0 END), 0) AS DLM_PROSES,\n    COALESCE(SUM(CASE WHEN STATUS_PENCAPAIAN_SLA = 'LEWAT SLA' AND KATEGORI_STATUS = 'DALAM PROSES' THEN 1 ELSE 0 END), 0) AS TOTAL_OVERDUE\nFROM US_DWH.BI_T_ALL\nWHERE 1=1\n  AND UPPER(JENIS_IZIN) IN ('PB','PD')\n  AND {tgl_status_terakhir}\n  AND {kategori_status}\n  AND {tahun}\n  AND {bulan}",
+    "params": {
+      "tgl_status_terakhir": "Filter tanggal (contoh: TRUNC(TGL_STATUS_TERAKHIR) >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "kategori_status": "Filter status (contoh: KATEGORI_STATUS = 'TERBIT')",
+      "tahun": "Filter tahun (contoh: TO_CHAR(TGL_STATUS_TERAKHIR, 'YYYY') = '2025')",
+      "bulan": "Filter bulan (contoh: TO_CHAR(TGL_STATUS_TERAKHIR, 'MM') = '01')"
+    },
+    "examples": ["Scorecard PB/PD", "Ringkasan permohonan izin PB dan PD"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_perizinan_gauge",
+    "description": "BP Batam: Gauge performa penyelesaian permohonan PB/PD",
+    "sql_template": "SELECT \n    COALESCE(\n        ROUND(\n            SUM(CASE WHEN KATEGORI_STATUS <> 'DALAM PROSES' THEN 1 ELSE 0 END) \n            / NULLIF(COUNT(NO_PERMOHONAN), 0), \n        4), \n    0) AS PERFORMA_PENYELESAIAN\nFROM US_DWH.BI_T_ALL\nWHERE 1=1\n  AND UPPER(JENIS_IZIN) IN ('PB','PD')\n  AND {tahun}\n  AND {bulan}\n  AND {rentang_tgl_masuk}",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": ["Gauge performa PB/PD", "Performa penyelesaian PB dan PD"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_perizinan_komposisi",
+    "description": "BP Batam: Komposisi status permohonan PB/PD (stacked bar)",
+    "sql_template": "SELECT \n    KATEGORI_STATUS,\n    COUNT(NO_PERMOHONAN) AS JUMLAH\nFROM US_DWH.BI_T_ALL\nWHERE 1=1\n  AND UPPER(JENIS_IZIN) IN ('PB','PD')\n  AND {tgl_status_terakhir}\n  AND {tahun}\n  AND {bulan}\nGROUP BY KATEGORI_STATUS\nORDER BY JUMLAH DESC",
+    "params": {
+      "tgl_status_terakhir": "Filter tanggal (contoh: TRUNC(TGL_STATUS_TERAKHIR) >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "tahun": "Filter tahun (contoh: TO_CHAR(TGL_STATUS_TERAKHIR, 'YYYY') = '2025')",
+      "bulan": "Filter bulan (contoh: TO_CHAR(TGL_STATUS_TERAKHIR, 'MM') = '01')"
+    },
+    "examples": ["Komposisi status PB/PD", "Sebaran status permohonan PB dan PD"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_perizinan_sankey",
+    "description": "BP Batam: Diagram Sankey PB/PD — alur permohonan",
+    "sql_template": "SELECT \n    JENIS_IZIN AS SOURCE, \n    KATEGORI_STATUS AS TARGET, \n    COUNT(NO_PERMOHONAN) AS VALUE\nFROM US_DWH.BI_T_ALL\nWHERE 1=1\n  AND UPPER(JENIS_IZIN) IN ('PB','PD')\n  AND {tahun}\n  AND {bulan}\n  AND {rentang_tgl_masuk}\nGROUP BY JENIS_IZIN, KATEGORI_STATUS\nORDER BY VALUE DESC",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": ["Sankey PB/PD", "Alur permohonan PB dan PD"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_perizinan_tren",
+    "description": "BP Batam: Tren inflow vs outflow PB/PD per hari",
+    "sql_template": "SELECT \n    TRUNC(TGL_MASUK) AS TANGGAL,\n    COUNT(NO_PERMOHONAN) AS INFLOW_MASUK,\n    SUM(CASE WHEN UPPER(KATEGORI_STATUS) = 'TERBIT' THEN 1 ELSE 0 END) AS OUTFLOW_TERBIT\nFROM US_DWH.BI_T_ALL\nWHERE TGL_MASUK IS NOT NULL\n  AND UPPER(JENIS_IZIN) IN ('PB','PD')\n  AND {rentang_tgl_masuk}\n  AND {tahun}\n  AND {bulan}\nGROUP BY TRUNC(TGL_MASUK)\nORDER BY TRUNC(TGL_MASUK) ASC",
+    "params": {
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')"
+    },
+    "examples": ["Tren inflow outflow PB/PD", "Perbandingan masuk dan terbit PB/PD"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_perizinan_funnel",
+    "description": "BP Batam: Funnel tahapan proses PB/PD",
+    "sql_template": "SELECT \n    KATEGORI_STATUS AS TAHAPAN,\n    COUNT(NO_PERMOHONAN) AS JUMLAH\nFROM US_DWH.BI_T_ALL\nWHERE 1=1\n  AND UPPER(JENIS_IZIN) IN ('PB','PD')\n  AND {tgl_status_terakhir}\n  AND {tahun}\n  AND {bulan}\nGROUP BY KATEGORI_STATUS\nORDER BY JUMLAH DESC",
+    "params": {
+      "tgl_status_terakhir": "Filter tanggal (contoh: TRUNC(TGL_STATUS_TERAKHIR) >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "tahun": "Filter tahun (contoh: TO_CHAR(TGL_STATUS_TERAKHIR, 'YYYY') = '2025')",
+      "bulan": "Filter bulan (contoh: TO_CHAR(TGL_STATUS_TERAKHIR, 'MM') = '01')"
+    },
+    "examples": ["Funnel PB/PD", "Kemacetan tahapan PB dan PD"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_perizinan_sla",
+    "description": "BP Batam: SLA per jenis izin per bulan (PB/PD)",
+    "sql_template": "SELECT \n    TO_CHAR(TGL_STATUS_TERAKHIR, 'YYYY-MM') AS PERIODE,\n    JENIS_IZIN,\n    COUNT(NO_PERMOHONAN) AS TOTAL,\n    ROUND(SUM(CASE WHEN STATUS_PENCAPAIAN_SLA = 'SESUAI SLA' THEN 1 ELSE 0 END) / NULLIF(COUNT(NO_PERMOHONAN), 0), 4) AS KEPATUHAN_SLA\nFROM US_DWH.BI_T_ALL\nWHERE 1=1\n  AND UPPER(JENIS_IZIN) IN ('PB','PD')\n  AND {tgl_status_terakhir}\n  AND {tahun}\nGROUP BY TO_CHAR(TGL_STATUS_TERAKHIR, 'YYYY-MM'), JENIS_IZIN\nORDER BY PERIODE ASC, JENIS_IZIN",
+    "params": {
+      "tgl_status_terakhir": "Filter tanggal (contoh: TRUNC(TGL_STATUS_TERAKHIR) >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "tahun": "Filter tahun (contoh: TO_CHAR(TGL_STATUS_TERAKHIR, 'YYYY') = '2025')"
+    },
+    "examples": ["SLA per jenis izin PB/PD", "Kepatuhan SLA bulanan PB dan PD"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_perizinan_leaderboard_verifikator",
+    "description": "BP Batam: Leaderboard verifikator PB/PD",
+    "sql_template": "SELECT \n    UPPER(TRIM(VERIFIKATOR)) AS NAMA_STAF,\n    COUNT(NO_PERMOHONAN) AS TOTAL_DOKUMEN,\n    SUM(CASE WHEN KATEGORI_STATUS NOT IN ('DALAM PROSES', 'PROSES') THEN 1 ELSE 0 END) AS TOTAL_LOLOS\nFROM US_DWH.BI_T_ALL\nWHERE VERIFIKATOR IS NOT NULL\n  AND UPPER(JENIS_IZIN) IN ('PB','PD')\n  AND {tahun}\n  AND {bulan}\n  AND {rentang_tgl_masuk}\nGROUP BY UPPER(TRIM(VERIFIKATOR))\nORDER BY TOTAL_DOKUMEN DESC",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": ["Leaderboard verifikator PB/PD", "Beban kerja staf PB dan PD"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_perizinan_countdown",
+    "description": "BP Batam: Countdown SLA permohonan PB/PD",
+    "sql_template": "SELECT \n    NO_PERMOHONAN,\n    JENIS_IZIN,\n    TGL_MASUK,\n    STATUS_TERAKHIR,\n    ROUND(SYSDATE - TGL_MASUK) AS HARI_TERLEWAT\nFROM US_DWH.BI_T_ALL\nWHERE 1=1\n  AND UPPER(JENIS_IZIN) IN ('PB','PD')\n  AND KATEGORI_STATUS = 'DALAM PROSES'\n  AND {rentang_tgl_masuk}\n  AND {tahun}\n  AND {bulan}\nORDER BY HARI_TERLEWAT DESC",
+    "params": {
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')"
+    },
+    "examples": ["Countdown SLA PB/PD", "Permohonan mendekati deadline SLA"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_perizinan_jam_kerja",
+    "description": "BP Batam: Total dalam/luar jam kerja verifikator PB/PD",
+    "sql_template": "SELECT \n    CASE \n        WHEN TO_CHAR(TGL_STATUS_TERAKHIR, 'HH24MI') BETWEEN 800 AND 1630 THEN 'Dalam Jam Kerja'\n        ELSE 'Di Luar Jam Kerja'\n    END AS KATEGORI_WAKTU,\n    COUNT(NO_PERMOHONAN) AS JUMLAH_DOKUMEN\nFROM US_DWH.BI_T_ALL\nWHERE 1=1\n  AND UPPER(JENIS_IZIN) IN ('PB','PD')\n  AND VERIFIKATOR IS NOT NULL\n  AND {rentang_tgl_masuk}\n  AND {tahun}\n  AND {bulan}\nGROUP BY \n    CASE \n        WHEN TO_CHAR(TGL_STATUS_TERAKHIR, 'HH24MI') BETWEEN 800 AND 1630 THEN 'Dalam Jam Kerja'\n        ELSE 'Di Luar Jam Kerja'\n    END",
+    "params": {
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')"
+    },
+    "examples": ["Jam kerja verifikator PB/PD", "Proporsi kerja dalam dan luar jam"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_perizinan_rapor",
+    "description": "BP Batam: Rapor evaluasi staf PB/PD",
+    "sql_template": "SELECT \n    UPPER(TRIM(VERIFIKATOR)) AS NAMA_STAF,\n    COUNT(NO_PERMOHONAN) AS TOTAL_KERJA,\n    SUM(CASE WHEN KATEGORI_STATUS NOT IN ('DALAM PROSES', 'PROSES') THEN 1 ELSE 0 END) AS TOTAL_LOLOS,\n    SUM(CASE WHEN STATUS_PENCAPAIAN_SLA IN ('SESUAI SLA', 'MEMENUHI SLA') THEN 1 ELSE 0 END) AS TOTAL_MEMENUHI_SLA\nFROM US_DWH.BI_T_ALL\nWHERE VERIFIKATOR IS NOT NULL\n  AND UPPER(JENIS_IZIN) IN ('PB','PD')\n  AND {tahun}\n  AND {bulan}\n  AND {rentang_tgl_masuk}\nGROUP BY UPPER(TRIM(VERIFIKATOR))\nORDER BY TOTAL_KERJA DESC",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": ["Rapor staf PB/PD", "Evaluasi kinerja verifikator PB dan PD"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_perizinan_detail",
+    "description": "BP Batam: Detail table permohonan izin PB/PD",
+    "sql_template": "SELECT \n    NO_PERMOHONAN,\n    JENIS_IZIN,\n    NAMA_PEMOHON,\n    KATEGORI_STATUS,\n    STATUS_TERAKHIR,\n    TGL_MASUK,\n    TGL_STATUS_TERAKHIR,\n    STATUS_PENCAPAIAN_SLA,\n    VERIFIKATOR\nFROM US_DWH.BI_T_ALL\nWHERE 1=1\n  AND UPPER(JENIS_IZIN) IN ('PB','PD')\n  AND {tgl_status_terakhir}\n  AND {kategori_status}\n  AND {tahun}\n  AND {bulan}\nORDER BY TGL_MASUK DESC",
+    "params": {
+      "tgl_status_terakhir": "Filter tanggal (contoh: TRUNC(TGL_STATUS_TERAKHIR) >= TO_DATE('2025-01-01','YYYY-MM-DD'))",
+      "kategori_status": "Filter status (contoh: KATEGORI_STATUS = 'TERBIT')",
+      "tahun": "Filter tahun (contoh: TO_CHAR(TGL_STATUS_TERAKHIR, 'YYYY') = '2025')",
+      "bulan": "Filter bulan (contoh: TO_CHAR(TGL_STATUS_TERAKHIR, 'MM') = '01')"
+    },
+    "examples": ["Detail PB/PD", "Tabel permohonan PB dan PD"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_ikel_komoditas",
+    "description": "BP Batam: Izin keluar masuk barang per jenis komoditas",
+    "sql_template": "SELECT \n    KOMODITAS,\n    COUNT(NO_IZIN) AS JUMLAH_IZIN\nFROM US_DWH.BI_IKEL_ALL\nWHERE 1=1\n  AND {tahun}\n  AND {bulan}\n  AND {rentang_tgl_masuk}\nGROUP BY KOMODITAS\nORDER BY JUMLAH_IZIN DESC",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": ["Izin keluar masuk per komoditas", "Total per jenis komoditas"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_ikel_perusahaan",
+    "description": "BP Batam: Izin keluar masuk barang per perusahaan",
+    "sql_template": "SELECT \n    NAMA_PERUSAHAAN,\n    COUNT(NO_IZIN) AS JUMLAH_IZIN\nFROM US_DWH.BI_IKEL_ALL\nWHERE 1=1\n  AND {tahun}\n  AND {bulan}\n  AND {rentang_tgl_masuk}\nGROUP BY NAMA_PERUSAHAAN\nORDER BY JUMLAH_IZIN DESC",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": ["Izin keluar masuk per perusahaan", "Total per perusahaan"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_ikel_detail",
+    "description": "BP Batam: Detail izin keluar masuk barang",
+    "sql_template": "SELECT \n    NO_IZIN,\n    NAMA_PERUSAHAAN,\n    KOMODITAS,\n    VOLUME,\n    SATUAN,\n    TGL_MASUK,\n    TGL_TERBIT,\n    TGL_KADALUARSA,\n    STATUS\nFROM US_DWH.BI_IKEL_ALL\nWHERE 1=1\n  AND {tahun}\n  AND {bulan}\n  AND {rentang_tgl_masuk}\nORDER BY TGL_MASUK DESC",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": ["Detail izin keluar masuk", "Tabel izin keluar masuk barang"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_reklame_masuk",
+    "description": "BP Batam: Total masuk reklame",
+    "sql_template": "SELECT \n    COUNT(NO_REKLAME) AS TOTAL_MASUK,\n    SUM(CASE WHEN UPPER(STATUS) = 'TERBIT' THEN 1 ELSE 0 END) AS TOTAL_TERBIT,\n    SUM(CASE WHEN UPPER(STATUS) = 'DALAM PROSES' THEN 1 ELSE 0 END) AS TOTAL_DALAM_PROSES\nFROM US_DWH.REK_IZIN_REKLAME\nWHERE 1=1\n  AND {tahun}\n  AND {bulan}\n  AND {rentang_tgl_masuk}",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": ["Total masuk reklame", "Rekap permohonan reklame"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_reklame_status",
+    "description": "BP Batam: Komposisi status reklame",
+    "sql_template": "SELECT \n    STATUS,\n    COUNT(NO_REKLAME) AS JUMLAH\nFROM US_DWH.REK_IZIN_REKLAME\nWHERE 1=1\n  AND {tahun}\n  AND {bulan}\nGROUP BY STATUS\nORDER BY JUMLAH DESC",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')"
+    },
+    "examples": ["Komposisi status reklame", "Status permohonan reklame"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_reklame_kadaluarsa",
+    "description": "BP Batam: Kadaluarsa reklame",
+    "sql_template": "SELECT \n    NO_REKLAME,\n    NAMA_PEMOHON,\n    LOKASI,\n    TGL_MULAI,\n    TGL_JATUH_TEMPO,\n    NILAI_RETRIBUSI\nFROM US_DWH.REK_IZIN_REKLAME\nWHERE TGL_JATUH_TEMPO < SYSDATE\n  AND {tahun}\nORDER BY TGL_JATUH_TEMPO ASC",
+    "params": {
+      "tahun": "Filter tahun (contoh: TO_CHAR(TGL_JATUH_TEMPO, 'YYYY') = '2025')"
+    },
+    "examples": ["Reklame kadaluarsa", "Reklame lewat masa berlaku"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_reklame_tanggal_kosong",
+    "description": "BP Batam: Reklame tanpa tanggal/tanggal kosong",
+    "sql_template": "SELECT \n    NO_REKLAME,\n    NAMA_PEMOHON,\n    LOKASI,\n    JENIS_REKLAME,\n    TGL_MULAI,\n    TGL_JATUH_TEMPO\nFROM US_DWH.REK_IZIN_REKLAME\nWHERE TGL_MULAI IS NULL OR TGL_JATUH_TEMPO IS NULL\nORDER BY NO_REKLAME",
+    "params": {},
+    "examples": ["Reklame tanpa tanggal", "Data reklame tidak lengkap"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_reklame_rasio",
+    "description": "BP Batam: Rasio masa berlaku reklame",
+    "sql_template": "SELECT \n    JENIS_REKLAME,\n    COUNT(NO_REKLAME) AS JUMLAH,\n    ROUND(AVG(TGL_JATUH_TEMPO - TGL_MULAI), 0) AS RATA_MASA_BERLAKU\nFROM US_DWH.REK_IZIN_REKLAME\nWHERE TGL_MULAI IS NOT NULL AND TGL_JATUH_TEMPO IS NOT NULL\n  AND {tahun}\nGROUP BY JENIS_REKLAME\nORDER BY JUMLAH DESC",
+    "params": {
+      "tahun": "Filter tahun (contoh: TO_CHAR(TGL_MULAI, 'YYYY') = '2025')"
+    },
+    "examples": ["Rasio masa berlaku reklame", "Rata-rata masa berlaku per jenis"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_reklame_tagihan",
+    "description": "BP Batam: Daftar tagihan perpanjangan reklame",
+    "sql_template": "SELECT \n    NO_REKLAME,\n    NAMA_PEMOHON,\n    TGL_JATUH_TEMPO,\n    NILAI_RETRIBUSI,\n    STATUS_TAGIHAN\nFROM US_DWH.REK_TAGIHAN_REKLAME\nWHERE 1=1\n  AND {tahun}\n  AND {bulan}\nORDER BY TGL_JATUH_TEMPO ASC",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')"
+    },
+    "examples": ["Tagihan perpanjangan reklame", "Daftar tagihan reklame"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_reklame_detail",
+    "description": "BP Batam: Detail reklame",
+    "sql_template": "SELECT \n    NO_REKLAME,\n    NAMA_PEMOHON,\n    LOKASI,\n    JENIS_REKLAME,\n    UKURAN,\n    TGL_MULAI,\n    TGL_JATUH_TEMPO,\n    NILAI_RETRIBUSI,\n    STATUS\nFROM US_DWH.REK_IZIN_REKLAME\nWHERE 1=1\n  AND {tahun}\n  AND {bulan}\n  AND {rentang_tgl_masuk}\nORDER BY TGL_MASUK DESC",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": ["Detail reklame", "Tabel data reklame"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_pengaduan_masuk",
+    "description": "BP Batam: Total masuk pengaduan",
+    "sql_template": "SELECT \n    COUNT(NO_PENGADUAN) AS TOTAL_MASUK,\n    SUM(CASE WHEN UPPER(STATUS) = 'SELESAI' THEN 1 ELSE 0 END) AS TOTAL_SELESAI,\n    SUM(CASE WHEN UPPER(STATUS) != 'SELESAI' THEN 1 ELSE 0 END) AS TOTAL_BELUM\nFROM US_DWH.PENGADUAN_ALL\nWHERE 1=1\n  AND {tahun}\n  AND {bulan}\n  AND {rentang_tgl_masuk}",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": ["Total pengaduan", "Rekap pengaduan masuk"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_pengaduan_status",
+    "description": "BP Batam: Komposisi status pengaduan",
+    "sql_template": "SELECT \n    STATUS,\n    COUNT(NO_PENGADUAN) AS JUMLAH\nFROM US_DWH.PENGADUAN_ALL\nWHERE 1=1\n  AND {tahun}\n  AND {bulan}\nGROUP BY STATUS\nORDER BY JUMLAH DESC",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')"
+    },
+    "examples": ["Komposisi status pengaduan", "Status pengaduan"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_pengaduan_detail",
+    "description": "BP Batam: Detail pengaduan",
+    "sql_template": "SELECT \n    NO_PENGADUAN,\n    NAMA_PELAPOR,\n    KATEGORI,\n    DESKRIPSI,\n    STATUS,\n    TGL_MASUK,\n    TGL_SELESAI,\n    PIC\nFROM US_DWH.PENGADUAN_ALL\nWHERE 1=1\n  AND {tahun}\n  AND {bulan}\n  AND {rentang_tgl_masuk}\nORDER BY TGL_MASUK DESC",
+    "params": {
+      "tahun": "Filter tahun (contoh: TAHUN = '2025')",
+      "bulan": "Filter bulan (contoh: BULAN = '01')",
+      "rentang_tgl_masuk": "Filter rentang tanggal masuk (contoh: TGL_MASUK >= TO_DATE('2025-01-01','YYYY-MM-DD'))"
+    },
+    "examples": ["Detail pengaduan", "Tabel pengaduan"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_tracking",
+    "description": "BP Batam: Tracking permohonan berdasarkan nomor permohonan",
+    "sql_template": "SELECT \n    NO_PERMOHONAN,\n    JENIS_IZIN,\n    NAMA_PEMOHON,\n    KATEGORI_STATUS,\n    STATUS_TERAKHIR,\n    TGL_MASUK,\n    TGL_STATUS_TERAKHIR,\n    STATUS_PENCAPAIAN_SLA,\n    VERIFIKATOR\nFROM US_DWH.BI_T_ALL\nWHERE UPPER(NO_PERMOHONAN) LIKE UPPER('%' || '{no_permohonan}' || '%')\nORDER BY TGL_MASUK DESC",
+    "params": {
+      "no_permohonan": "Nomor permohonan yang ingin dilacak (contoh: 'PB/2025/0001')"
+    },
+    "examples": ["Tracking permohonan", "Lacak status izin"],
+    "active": true,
+    "source": "bp"
+  },
+  {
+    "id": "bp_profil_usaha",
+    "description": "BP Batam: Profil usaha perizinan",
+    "sql_template": "SELECT \n    UPPER(TRIM(NAMA_PEMOHON)) AS NAMA_PERUSAHAAN,\n    COUNT(NO_PERMOHONAN) AS TOTAL_IZIN,\n    MIN(TGL_MASUK) AS TGL_PERMOHONAN_PERTAMA,\n    MAX(TGL_MASUK) AS TGL_PERMOHONAN_TERAKHIR,\n    MAX(CASE WHEN KATEGORI_STATUS = 'DALAM PROSES' THEN 'AKTIF' ELSE 'TIDAK AKTIF' END) AS STATUS_AKTIF\nFROM US_DWH.BI_T_ALL\nWHERE 1=1\n  AND UPPER(TRIM(NAMA_PEMOHON)) LIKE UPPER('%' || '{nama_perusahaan}' || '%')\n  AND {tahun}\nGROUP BY UPPER(TRIM(NAMA_PEMOHON))\nORDER BY TOTAL_IZIN DESC",
+    "params": {
+      "nama_perusahaan": "Nama perusahaan yang dicari (contoh: 'PT ABC')",
+      "tahun": "Filter tahun (contoh: TO_CHAR(TGL_MASUK, 'YYYY') = '2025')"
+    },
+    "examples": ["Profil usaha", "Riwayat perizinan perusahaan"],
+    "active": true,
+    "source": "bp"
   }
 ]
