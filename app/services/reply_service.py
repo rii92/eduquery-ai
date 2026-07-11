@@ -85,34 +85,36 @@ async def generate_llm_reply(
     template_insight = domain.get("insight", "")
     template_rekomendasi = domain.get("rekomendasi", "")
 
-    prompt = f"""Kamu adalah asisten analis data warehouse BP Batam. Berikan SATU PARAGRAF jawaban natural yang menggabungkan data, insight, dan rekomendasi.
+    prompt = f"""Kamu adalah analis data BP Batam yang sedang menjelaskan temuan kepada rekan kerja. Jawab dengan bahasa natural, mengalir, dan penuh insight — seperti ngobrol santai tapi berbasis data.
 
-LAPORAN: {label}
+JUDUL LAPORAN: {label}
 PERTANYAAN: {question}
-TOTAL BARIS DATA: {total_rows}
+JUMLAH BARIS: {total_rows}
 
 DATA (JSON):
 {data_json}
 
-KOLOM DAN NILAI:
+NILAI KOLOM:
 {column_values}
 
-FILTER AKTIF:
-{json.dumps(filters, indent=2, ensure_ascii=False) if filters else "Tidak ada filter"}
+FILTER:
+{json.dumps(filters, indent=2, ensure_ascii=False) if filters else "Tidak ada"}
 
-GAYA PENULISAN — Contoh template insight untuk laporan ini:
+CONTOH GAYA INSIGHT (sesuaikan dengan data asli):
 {template_insight}
 
-Contoh template rekomendasi:
+CONTOH GAYA REKOMENDASI:
 {template_rekomendasi}
 
-INSTRUKSI:
-- Jawab dalam SATU paragraf saja, tidak lebih.
-- Awali dengan angka/kondisi utama (INTI).
-- Lanjut dengan analisis proporsi dan pola (ANGKA + INSIGHT).
-- Akhiri dengan 1 rekomendasi konkret (SARAN).
-- Gunakan gaya bahasa seperti template di atas — natural, domain BP Batam, tanpa markdown, tanpa emoji, tanpa bullet.
-- JANGAN mengarang angka. Jika data kosong, bilang data tidak tersedia.
+PANDUAN:
+- Buka dengan angka utama atau temuan paling menarik.
+- Jelaskan proporsi, tren, atau pola yang terlihat — apa arti angka-angka ini?
+- Jika ada data SLA/overdue, beri konteks dampaknya.
+- Jika data staf, soroti yang menonjol (positif/negatif).
+- Akhiri dengan 1 rekomendasi praktis yang bisa langsung ditindaklanjuti.
+- Gunakan bahasa Indonesia natural, seperti seorang analis senior bicara. Jangan kaku.
+- JANGAN markdown, JANGAN emoji, JANGAN bullet.
+- JANGAN mengarang angka — jika data kosong, bilang saja.
 """
 
     try:

@@ -38,7 +38,7 @@ class QueryRequest(BaseModel):
     rentang_tgl_masuk: str = ""
     filter_tahun: str = ""
     filter_bulan: str = ""
-    reply_provider: str = "deterministic"
+    reply_provider: str = "llm"
     reply_llm_provider: str = "llamacpp"
 
 
@@ -179,7 +179,7 @@ async def _sse_process(req_data: dict):
 
     # ── Step 11: Insight Narration (LLM opsional / otomatis di Natural mode) ──
     llm_insight = ""
-    reply_provider_val = req_data.get("reply_provider", "deterministic")
+    reply_provider_val = req_data.get("reply_provider", "llm")
     should_insight = insight_provider == "llm" or reply_provider_val == "llm"
     insight_prov = insight_llm_provider if insight_provider == "llm" else req_data.get("reply_llm_provider", "llamacpp")
     if should_insight:
@@ -325,7 +325,7 @@ async def query_stream(
     rentang_tgl_masuk: str = Query("", description="Filter rentang tanggal masuk (full SQL clause)"),
     filter_tahun: str = Query("", description="Filter tahun (contoh: TAHUN = '2025')"),
     filter_bulan: str = Query("", description="Filter bulan (contoh: BULAN = '01')"),
-    reply_provider: str = Query("deterministic", description="Gaya jawaban: deterministic / llm"),
+    reply_provider: str = Query("llm", description="Gaya jawaban: deterministic / llm"),
     reply_llm_provider: str = Query("llamacpp", description="Provider LLM untuk jawaban natural: local / cloud / llamacpp"),
 ):
     req_data = {
