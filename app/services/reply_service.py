@@ -85,7 +85,7 @@ async def generate_llm_reply(
     template_insight = domain.get("insight", "")
     template_rekomendasi = domain.get("rekomendasi", "")
 
-    prompt = f"""Kamu adalah asisten analis data warehouse BP Batam. Berikan jawaban yang informatif, analitis, dan mengandung insight.
+    prompt = f"""Kamu adalah asisten analis data warehouse BP Batam. Berikan SATU PARAGRAF jawaban natural yang menggabungkan data, insight, dan rekomendasi.
 
 LAPORAN: {label}
 PERTANYAAN: {question}
@@ -107,12 +107,12 @@ Contoh template rekomendasi:
 {template_rekomendasi}
 
 INSTRUKSI:
-1. INTI — Jawab inti laporan dalam 1-2 kalimat pertama.
-2. ANGKA — Sebutkan angka-angka penting berikut analisis proporsinya (misal: 60% terbit, 15% masih proses).
-3. INSIGHT — Analisis pola dari data menggunakan gaya bahasa seperti template di atas. Sesuaikan dengan nilai kolom yang ada di DATA.
-4. SARAN — Akhiri dengan 1-2 saran konkret menggunakan gaya seperti template rekomendasi di atas.
-5. GAYA BAHASA — Bahasa Indonesia natural, tidak kaku, tanpa markdown. Paragraf pendek-pendek.
-6. LARANGAN — Jangan mengarang angka. Jika data kosong, bilang data tidak tersedia.
+- Jawab dalam SATU paragraf saja, tidak lebih.
+- Awali dengan angka/kondisi utama (INTI).
+- Lanjut dengan analisis proporsi dan pola (ANGKA + INSIGHT).
+- Akhiri dengan 1 rekomendasi konkret (SARAN).
+- Gunakan gaya bahasa seperti template di atas — natural, domain BP Batam, tanpa markdown, tanpa emoji, tanpa bullet.
+- JANGAN mengarang angka. Jika data kosong, bilang data tidak tersedia.
 """
 
     try:
