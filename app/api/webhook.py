@@ -43,7 +43,7 @@ async def webhook_health():
 
     # Test 2: Chat completion dummy
     try:
-        client = AsyncOpenAI(api_key="", base_url=LLAMACPP_API_URL, timeout=10)
+        client = AsyncOpenAI(api_key="sk-no-key-required", base_url=LLAMACPP_API_URL, timeout=10)
         resp = await client.chat.completions.create(
             model=LLAMACPP_MODEL,
             messages=[{"role": "user", "content": "Katakan halo dalam 1 kata"}],

@@ -84,7 +84,7 @@ class LLMClient:
         max_tokens = kwargs.get("max_tokens", 2048)
 
         client = AsyncOpenAI(
-            api_key="",
+            api_key="sk-no-key-required",
             base_url=LLAMACPP_API_URL,
             timeout=timeout,
         )
