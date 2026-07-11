@@ -51,15 +51,21 @@ async def generate_llm_reply(
     timeout: int = 120,
 ) -> str:
     label = _INTENT_LABELS.get(intent, intent)
-    data_json = json.dumps(serialize_dates(result[:20]), indent=2, ensure_ascii=False)
     total_rows = len(result)
-
     filters = {k: v for k, v in payload.items() if v and k not in ("intent", "_reply")}
-    column_values = _extract_columns(result)
+
+    try:
+        data_json = json.dumps(serialize_dates(result[:20]), indent=2, ensure_ascii=False)
+        column_values = _extract_columns(result)
+    except Exception as e:
+        logger.warning("gagal serialize data — %s", e)
+        return ""
 
     domain = _INSIGHT_TEMPLATES.get(intent, {})
     template_insight = domain.get("insight", "")
     template_rekomendasi = domain.get("rekomendasi", "")
+
+    filters_json = json.dumps(filters, indent=2, ensure_ascii=False) if filters else "Tidak ada"
 
     prompt = f"""Kamu adalah analis data BP Batam yang sedang menjelaskan temuan kepada rekan kerja. Jawab dengan bahasa natural, mengalir, dan penuh insight — seperti ngobrol santai tapi berbasis data.
 
@@ -74,7 +80,7 @@ NILAI KOLOM:
 {column_values}
 
 FILTER:
-{json.dumps(filters, indent=2, ensure_ascii=False) if filters else "Tidak ada"}
+{filters_json}
 
 CONTOH GAYA INSIGHT (sesuaikan dengan data asli):
 {template_insight}
