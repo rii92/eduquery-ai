@@ -8,6 +8,7 @@ from app.ai.embedding_classifier import classify_by_embedding
 from app.services.bp_database_service import BPDatabaseService, DatabaseConnectionError
 from app.services.bp_formatter_service import format_bp_reply
 from app.services.insight_service import InsightService
+from app.services.reply_service import generate_llm_reply
 from app.llm.client import LLMClient
 
 router = APIRouter()
@@ -61,13 +62,16 @@ async def webhook(msg: WhatsAppMessage):
     det_insight = insight_svc.deterministic(payload, result)
 
     llm_insight = ""
+    reply = format_bp_reply(payload, result)
+
     if result:
         for prov in ("llamacpp", "local"):
             llm_client = LLMClient(provider=prov)
             if await llm_client.check_health():
                 llm_insight = await insight_svc.llm_narration(llm_client, intent, msg.message, result, det_insight)
+                natural = await generate_llm_reply(msg.message, intent, result, payload, llm_provider=prov, timeout=120)
+                if natural:
+                    reply = natural
                 break
-
-    reply = format_bp_reply(payload, result)
 
     return {"reply": reply, "insight": llm_insight, "deterministic_insight": det_insight, "elapsed": round(time.time() - t0, 2)}
