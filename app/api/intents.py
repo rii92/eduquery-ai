@@ -1,5 +1,10 @@
 """CRUD API for managing intents."""
-from fastapi import APIRouter, HTTPException
+import csv
+import io
+import json
+
+from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Dict, List, Optional
 
@@ -75,3 +80,79 @@ def remove_intent(intent_id: str):
     if not delete_intent(intent_id):
         raise HTTPException(404, "Intent not found")
     return {"ok": True}
+
+
+# ── CSV Export ──
+
+@router.get("/api/intents/export/csv")
+def export_intents_csv():
+    """Export all intents as CSV (also serves as download template)."""
+    intents = list_intents()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "id", "description", "sql_template", "params", "examples",
+        "keyword_patterns", "llm_label", "insight_template", "format_config", "active",
+    ])
+
+    for item in intents:
+        writer.writerow([
+            item.get("id", ""),
+            item.get("description", ""),
+            item.get("sql_template", ""),
+            json.dumps(item.get("params", {}), ensure_ascii=False),
+            json.dumps(item.get("examples", []), ensure_ascii=False),
+            json.dumps(item.get("keyword_patterns", []), ensure_ascii=False),
+            item.get("llm_label", ""),
+            json.dumps(item.get("insight_template", {}), ensure_ascii=False),
+            json.dumps(item.get("format_config", {}), ensure_ascii=False),
+            str(item.get("active", True)).lower(),
+        ])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=intents_template.csv"},
+    )
+
+
+# ── CSV Import ──
+
+@router.post("/api/intents/import/csv")
+async def import_intents_csv(file: UploadFile = File(...)):
+    """Import intents from a CSV file. Returns count of imported + errors."""
+    content = await file.read()
+    text = content.decode("utf-8-sig")
+    reader = csv.DictReader(io.StringIO(text))
+
+    results = {"imported": 0, "skipped": 0, "errors": []}
+
+    for row in reader:
+        try:
+            data = {
+                "id": row.get("id", "").strip() or None,
+                "description": row.get("description", "").strip(),
+                "sql_template": row.get("sql_template", "").strip(),
+                "params": json.loads(row.get("params", "{}") or "{}"),
+                "examples": json.loads(row.get("examples", "[]") or "[]"),
+                "keyword_patterns": json.loads(row.get("keyword_patterns", "[]") or "[]"),
+                "llm_label": row.get("llm_label", "").strip(),
+                "insight_template": json.loads(row.get("insight_template", "{}") or "{}"),
+                "format_config": json.loads(row.get("format_config", "{}") or "{}"),
+                "active": row.get("active", "true").strip().lower() == "true",
+            }
+
+            if not data["description"] or not data["sql_template"]:
+                results["skipped"] += 1
+                results["errors"].append(f"Baris {reader.line_num}: description atau sql_template kosong")
+                continue
+
+            create_intent(data)
+            results["imported"] += 1
+
+        except Exception as e:
+            results["errors"].append(f"Baris {reader.line_num}: {e}")
+
+    return results

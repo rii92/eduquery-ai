@@ -28,9 +28,18 @@
   <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Daftar Intent</h5>
-      <button class="btn btn-primary btn-sm" onclick="showAddModal()">
-        <i class="bi bi-plus-lg"></i> Intent Baru
-      </button>
+      <div class="d-flex gap-2">
+        <button class="btn btn-success btn-sm" onclick="downloadTemplate()">
+          <i class="bi bi-download"></i> Template CSV
+        </button>
+        <button class="btn btn-info btn-sm" onclick="document.getElementById('csvFileInput').click()">
+          <i class="bi bi-upload"></i> Import CSV
+        </button>
+        <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="importCsv(event)">
+        <button class="btn btn-primary btn-sm" onclick="showAddModal()">
+          <i class="bi bi-plus-lg"></i> Intent Baru
+        </button>
+      </div>
     </div>
 
     <div id="loadingSpinner" class="text-center py-5">
@@ -533,6 +542,48 @@
       } catch (e) {
         alert('Gagal menghapus: ' + e.message);
       }
+    }
+
+    // ── CSV Download Template ──
+
+    function downloadTemplate() {
+      window.location.href = '/api/intents/export/csv';
+    }
+
+    // ── CSV Import ──
+
+    async function importCsv(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/api/intents/import/csv', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          alert('Gagal import: ' + (err.detail || res.statusText));
+          return;
+        }
+        const result = await res.json();
+        let msg = `Import selesai: ${result.imported} berhasil.`;
+        if (result.skipped > 0) msg += ` ${result.skipped} dilewati.`;
+        if (result.errors && result.errors.length > 0) {
+          msg += `\n\nError:\n${result.errors.slice(0, 5).join('\n')}`;
+          if (result.errors.length > 5) msg += `\n... dan ${result.errors.length - 5} error lainnya.`;
+        }
+        alert(msg);
+        loadIntents();
+      } catch (e) {
+        alert('Gagal import: ' + e.message);
+      }
+
+      // reset file input biar bisa milih file yang sama lagi
+      event.target.value = '';
     }
   </script>
 </body>
