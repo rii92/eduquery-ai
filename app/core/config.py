@@ -36,8 +36,27 @@ EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/paraphrase
 DB_TYPE = os.getenv("DB_TYPE", "oracle")  # "oracle" | "sqlite"
 SQLITE_DB_PATH = os.getenv("SQLITE_DB_PATH", "data/biquery.db")
 
-# ── BP Batam Oracle ──
+# ── BP Batam Oracle (US_DWH + US_DT) ──
 BP_DB_USER = os.getenv("BP_DB_USER", "us_dwh")
 BP_DB_PASSWORD = os.getenv("BP_DB_PASSWORD", "")
 BP_DB_HOST = os.getenv("BP_DB_HOST", "bpdb-scan.bpbatam.go.id:1521")
 BP_DB_SERVICE_NAME = os.getenv("BP_DB_SERVICE_NAME", "begs")
+
+# ── iBOSS Oracle (US_oss via us_si) ──
+IBOSS_DB_USER = os.getenv("IBOSS_DB_USER", "us_si")
+IBOSS_DB_PASSWORD = os.getenv("IBOSS_DB_PASSWORD", "")
+IBOSS_DB_HOST = os.getenv("IBOSS_DB_HOST", "bpdb-scan.bpbatam.go.id:1521")
+IBOSS_DB_SERVICE_NAME = os.getenv("IBOSS_DB_SERVICE_NAME", "begs")
+
+# ── vOSS Oracle (BSWBY via us_voss) ──
+VOSS_DB_USER = os.getenv("VOSS_DB_USER", "us_voss")
+VOSS_DB_PASSWORD = os.getenv("VOSS_DB_PASSWORD", "")
+VOSS_DB_HOST = os.getenv("VOSS_DB_HOST", "172.16.101.81:1521")
+VOSS_DB_SERVICE_NAME = os.getenv("VOSS_DB_SERVICE_NAME", "BSWBY")
+
+# ── BCARE PostgreSQL ──
+BCARE_DB_HOST = os.getenv("BCARE_DB_HOST", "172.16.10.126")
+BCARE_DB_PORT = int(os.getenv("BCARE_DB_PORT", "5181"))
+BCARE_DB_NAME = os.getenv("BCARE_DB_NAME", "bcare")
+BCARE_DB_USER = os.getenv("BCARE_DB_USER", "us_ro_pg")
+BCARE_DB_PASSWORD = os.getenv("BCARE_DB_PASSWORD", "")
