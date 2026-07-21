@@ -38,6 +38,42 @@ def is_followup(question: str) -> bool:
     return False
 
 
+def needs_context(question: str) -> bool:
+    """Check if question likely needs conversation context — short or contains follow-up indicators.
+
+    Returns True if message is short (< 8 words) or contains indicator words
+    like 'rekomendasi', 'selanjutnya', 'detail', 'terus', 'lalu', etc.
+    This is used as a secondary check when is_followup() returns False
+    but the question might still be a continuation.
+    """
+    q = question.lower().strip().strip(".!? ")
+    words = q.split()
+
+    # Very short messages with no intent match are almost certainly follow-ups
+    if len(words) < 4:
+        return True
+
+    # Check for continuation/recommendation indicator words
+    indicators = [
+        r"\brekomendasi\b", r"\b(saran|masukan|usul)\b",
+        r"\bselanjutnya\b", r"\bberikutnya\b", r"\blanjut\w*\b",
+        r"\bdetail\b", r"\bdetil\b", r"\brinci\b", r"\brincian\b",
+        r"\bterus\b", r"\blalu\b", r"\bkemudian\b",
+        r"\blebih\b", r"\btambah\b", r"\blagi\b",
+        r"\bjelas\w*\b", r"\bterang\w*\b",
+        r"\bseperti\b", r"\bcontoh\b",
+        r"\blain\b", r"\blainnya\b",
+        r"\bperbandingan\b", r"\bbanding\b",
+        r"\bgrafik\b", r"\bchart\b", r"\bdiagram\b",
+        r"\btabel\b", r"\btampilkan\b",
+    ]
+    for pat in indicators:
+        if re.search(pat, q):
+            return True
+
+    return False
+
+
 def is_affirmative(question: str) -> bool:
     """Check if follow-up is affirmative (iya/ya/lanjut) vs negative (tidak/nggak)."""
     q = question.lower().strip().strip(".!? ")

@@ -4,7 +4,7 @@ import time
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from app.ai.keyword_classifier import classify_by_keyword, is_blacklisted, is_followup, is_affirmative
+from app.ai.keyword_classifier import classify_by_keyword, is_blacklisted, is_followup, is_affirmative, needs_context
 from app.ai.embedding_classifier import classify_by_embedding
 from app.ai.filter_resolver import FilterResolver
 from app.services.bp_database_service import BPDatabaseService, DatabaseConnectionError
@@ -76,19 +76,21 @@ async def webhook(msg: WhatsAppMessage):
     if intent == "_greeting":
         return {"reply": payload.get("_reply", "Halo!"), "elapsed": round(time.time() - t0, 2)}
 
-    # Step 3.5: Follow-up
+    # Step 3.5: Follow-up / needs-context
     if not intent and history:
-        if is_followup(msg.message):
+        is_follow = is_followup(msg.message)
+        needs_ctx = needs_context(msg.message)
+        if is_follow or needs_ctx:
             last = history[-1]
-            if is_affirmative(msg.message):
-                logger.info("Follow-up affirmative dari user=%s, reuse intent=%s", msg.sender, last.intent)
-                payload = {
-                    "intent": last.intent,
-                    **last.payload,
-                }
-                intent = last.intent
-            else:
+            if is_follow and not is_affirmative(msg.message):
                 return {"reply": "Baik, ada pertanyaan lain yang bisa saya bantu?", "elapsed": round(time.time() - t0, 2)}
+            logger.info("Follow-up dari user=%s (follow=%s, ctx=%s), reuse intent=%s",
+                        msg.sender, is_follow, needs_ctx, last.intent)
+            payload = {
+                "intent": last.intent,
+                **last.payload,
+            }
+            intent = last.intent
 
     # Step 4: Embedding Classifier (fallback)
     if not intent:
@@ -102,7 +104,9 @@ async def webhook(msg: WhatsAppMessage):
 
     # FilterResolver: temporal keyword  SQL params
     if intent and intent not in ("_greeting",):
-        if not (is_followup(msg.message) and history):
+        is_follow = is_followup(msg.message)
+        needs_ctx = needs_context(msg.message)
+        if not ((is_follow or needs_ctx) and history):
             resolver = FilterResolver()
             resolved = resolver.apply(msg.message, intent)
             if resolved:

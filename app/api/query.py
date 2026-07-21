@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.ai.keyword_classifier import classify_by_keyword, is_blacklisted, is_followup, is_affirmative
+from app.ai.keyword_classifier import classify_by_keyword, is_blacklisted, is_followup, is_affirmative, needs_context
 from app.ai.embedding_classifier import classify_by_embedding
 from app.ai.filter_resolver import FilterResolver
 from app.llm.client import LLMClient
@@ -93,18 +93,13 @@ async def _sse_process(req_data: dict):
     payload = classify_by_keyword(message) or {}
     intent = payload.get("intent", "")
 
-    # ── Step 3.5: Follow-up detection ──
+    # ── Step 3.5: Follow-up / needs-context detection ──
     if not intent and history:
-        if is_followup(message):
+        is_follow = is_followup(message)
+        needs_ctx = needs_context(message)
+        if is_follow or needs_ctx:
             last = history[-1]
-            if is_affirmative(message):
-                yield _event({"step": "Melanjutkan percakapan sebelumnya...", "progress": 15})
-                payload = {
-                    "intent": last.intent,
-                    **last.payload,
-                }
-                intent = last.intent
-            else:
+            if is_follow and not is_affirmative(message):
                 yield _event({
                     "done": True,
                     "reply": "Baik, ada pertanyaan lain yang bisa saya bantu?",
@@ -112,6 +107,12 @@ async def _sse_process(req_data: dict):
                     "elapsed": round(time.time() - t0, 2), "progress": 100,
                 })
                 return
+            yield _event({"step": "Melanjutkan percakapan sebelumnya...", "progress": 15})
+            payload = {
+                "intent": last.intent,
+                **last.payload,
+            }
+            intent = last.intent
 
     # ── Step 4: Embedding Classifier (fallback jika keyword tidak cocok) ──
     if not intent or intent == "_greeting":
@@ -157,7 +158,9 @@ async def _sse_process(req_data: dict):
 
     # ── Step 5.5: FilterResolver (temporal keyword → SQL params) ──
     if intent and intent not in ("_greeting",):
-        if not (is_followup(message) and history):
+        is_follow = is_followup(message)
+        needs_ctx = needs_context(message)
+        if not ((is_follow or needs_ctx) and history):
             resolver = FilterResolver()
             resolved = resolver.apply(message, intent)
             if resolved:
@@ -268,21 +271,22 @@ async def query(req: QueryRequest):
     if intent == "_greeting":
         return QueryResponse(reply=payload.get("_reply", "Halo!"), intent="_greeting", session_id=session_id, elapsed=round(time.time() - t0, 2))
 
-    # Step 4: Follow-up handling (iya/tidak/lanjut dari percakapan sebelumnya)
+    # Step 4: Follow-up / needs-context handling
     if not intent and history:
-        if is_followup(req.message):
+        is_follow = is_followup(req.message)
+        needs_ctx = needs_context(req.message)
+        if is_follow or needs_ctx:
             last = history[-1]
-            if is_affirmative(req.message):
-                payload = {
-                    "intent": last.intent,
-                    **last.payload,
-                }
-                intent = last.intent
-            else:
+            if is_follow and not is_affirmative(req.message):
                 return QueryResponse(
                     reply="Baik, ada pertanyaan lain yang bisa saya bantu?",
                     session_id=session_id, elapsed=round(time.time() - t0, 2),
                 )
+            payload = {
+                "intent": last.intent,
+                **last.payload,
+            }
+            intent = last.intent
 
     # Step 5: Embedding Classifier (fallback, thread executor agar tidak block event loop)
     if not intent:
@@ -316,7 +320,9 @@ async def query(req: QueryRequest):
     # Step 6.5: FilterResolver (temporal keyword -> SQL params)
     if intent and intent not in ("_greeting",):
         # Only run resolver if NOT a follow-up (payload already has filters)
-        if not (is_followup(req.message) and history):
+        is_follow = is_followup(req.message)
+        needs_ctx = needs_context(req.message)
+        if not ((is_follow or needs_ctx) and history):
             resolver = FilterResolver()
             resolved = resolver.apply(req.message, intent)
             if resolved:
